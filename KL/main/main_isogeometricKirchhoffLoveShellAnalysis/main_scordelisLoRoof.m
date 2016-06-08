@@ -25,7 +25,7 @@
 % Date : 12.02.2015
 %
 %% Preamble
-clear;
+clear; 
 clc;
 
 %% Includes 
@@ -213,7 +213,9 @@ NBC.isConservative(1,1) = true;
 BSplinePatch = fillUpPatch...
     (analysis,p,Xi,q,Eta,CP,isNURBS,parameters,homDOFs,inhomDOFs,valuesInhomDOFs,...
     weakDBC,cables,NBC,[],[],[],[],[],int);
-%%Advance FEM: here The control points can be modified to change the shape here.
+
+
+%% Advance FEM: here The control points can be modified to change the shape here.
 [BSplinePatch]=ModifyCps( BSplinePatch,':2:3',0 );
 
 
@@ -239,21 +241,28 @@ plot_referenceConfigurationIGAThinStructure(p,q,Xi,Eta,BSplinePatch.CP,isNURBS,h
 title('Reference configuration for an isogeometric Kirchhoff-Love shell');
 graph.index = graph.index + 1;
 
-%%%Advance FEM:  Solve the system applying l                inear analysis
+%% %Advance FEM:  Solve the system applying linear analysis
 %------------------------------------
 %sensitivity analysis
 %modify the control points as desired
 
-delta=0.0001;%this is the increment used to calculate the new CPs
-[BSplinePatch]=CPDisturbance(BSplinePatch,[1 1],[0,0,1],delta);
-[StiffnessMatrix,F,minElArea,KDist]=ReducedStiffnessMatrix(BSplinePatch,0,[1 1]);
+delta=0.0001;%this is the increment used to calculate the new CP
+vector=[0,0,1];%direction of the distortion
+CP2Dist=[1 1];%control pint to disturb
+%returns the BSPLINEPATCH with the modified control points stored in the
+%variable CPd
+[BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta);
 
-%-------------------------------------
+[StiffnessMatrix,F,minElArea,KDist_K]=ReducedStiffnessMatrix(BSplinePatch,0,CP2Dist);
+
+%% Attention!!!! the function ReducedStiffnessMatrix needs to replacethe original function, send all the requiered arguments
+
+%% -------------------------------------
 [dHatLinear,F,minElArea,StiffnessMatrix] = solve_IGAKirchhoffLoveShellLinear...
     (BSplinePatch,solve_LinearSystem,'');
 
-%Advance FEM: here the sensitivity is computed 
-[ Ep ] = Sensitivity( StiffnessMatrix,KDist,delta,dHatLinear );
+%% Advance FEM: here the sensitivity is computed 
+[ Ep ] = Sensitivity( KDist,delta,dHatLinear );
 Ep
 
 %% Postprocessing

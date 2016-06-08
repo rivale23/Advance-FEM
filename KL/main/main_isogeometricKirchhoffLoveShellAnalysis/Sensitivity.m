@@ -1,8 +1,8 @@
-function [ Ep ] = Sensitivity( K,Kdelta,delta,U )
+function [ Ep ] = Sensitivity( Kdelta,delta,U )
 %SENSITIVITY Summary of this function goes here
 %   Detailed explanation goes here
 
-Kp=(Kdelta-K)./delta;
+Kp=(Kdelta)./delta;
 
 Ep=((-Kp*U)'*U)./2;
 
