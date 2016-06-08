@@ -214,7 +214,7 @@ BSplinePatch = fillUpPatch...
     (analysis,p,Xi,q,Eta,CP,isNURBS,parameters,homDOFs,inhomDOFs,valuesInhomDOFs,...
     weakDBC,cables,NBC,[],[],[],[],[],int);
 %%Advance FEM: here The control points can be modified to change the shape here.
-[BSplinePatch]=ModifyCps( BSplinePatch,0,0 );
+[BSplinePatch]=ModifyCps( BSplinePatch,':2:3',0 );
 
 
 %% Compute the load vectors for each patch (only for the visualization)
@@ -239,24 +239,21 @@ plot_referenceConfigurationIGAThinStructure(p,q,Xi,Eta,BSplinePatch.CP,isNURBS,h
 title('Reference configuration for an isogeometric Kirchhoff-Love shell');
 graph.index = graph.index + 1;
 
-%%%Advance FEM:  Solve the system applying linear analysis
+%%%Advance FEM:  Solve the system applying l                inear analysis
 %------------------------------------
 %sensitivity analysis
 %modify the control points as desired
-%the function ModifyCps returns a new BSpline Patch, for now it is only
-%modifying the second line of control points, but it should be able to
-%modify any CP
-delta=0.0001;%this is the increment used to calculate the new CPs
-[BSplinePatch2]=ModifyCps( BSplinePatch,0,delta );
 
-[StiffnessMatrix2,~,~] = computeStiffMtxAndLoadVctIGAKirchhoffLoveShellLinear(0,0,0,0,0,BSplinePatch2,0,0,0,0,0,0,0);
+delta=0.0001;%this is the increment used to calculate the new CPs
+[BSplinePatch]=CPDisturbance(BSplinePatch,[1 1],[0,0,1],delta);
+[StiffnessMatrix,F,minElArea,KDist]=ReducedStiffnessMatrix(BSplinePatch,0,[1 1]);
 
 %-------------------------------------
 [dHatLinear,F,minElArea,StiffnessMatrix] = solve_IGAKirchhoffLoveShellLinear...
     (BSplinePatch,solve_LinearSystem,'');
 
 %Advance FEM: here the sensitivity is computed 
-[ Ep ] = Sensitivity( StiffnessMatrix,StiffnessMatrix2,delta,dHatLinear );
+[ Ep ] = Sensitivity( StiffnessMatrix,KDist,delta,dHatLinear );
 Ep
 
 %% Postprocessing

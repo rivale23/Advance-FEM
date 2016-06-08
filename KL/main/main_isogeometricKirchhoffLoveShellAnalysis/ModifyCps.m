@@ -5,7 +5,7 @@ function [ ModifiedBspline ] = ModifyCps( BSplinepatch,DesiredCPs ,delta)
 
 %for test Ill just modify some
 CP=BSplinepatch.CP;
-CP(:,2,3)=CP(:,2,3)+delta;
+CP(DesiredCPs)=CP(DesiredCPs)+delta;
 
 ModifiedBspline=BSplinepatch;
 
