@@ -16,7 +16,7 @@ CPs=BSplinePatch.CP;
 CPs(Position(1),Position(2),1)=CPmod(1);
 CPs(Position(1),Position(2),2)=CPmod(2);
 CPs(Position(1),Position(2),3)=CPmod(3);
-
+BSplinePatchDist=BSplinePatch;
 BSplinePatchDist.CPd=CPs;
 
 

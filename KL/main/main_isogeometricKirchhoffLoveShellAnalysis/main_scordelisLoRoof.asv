@@ -262,20 +262,15 @@ CP2Dist=[1 1];%control pint to disturb
     (BSplinePatch,solve_LinearSystem,'');
 
 %% Advance FEM: here the sensitivity is computed
-%computes the sensitivity with the whole matrix
-[ Ep ] = Sensitivity( KDist,delta,dHatLinear );
-Ep
-%creates the reduced matrix and vector
+
+%creates the reduced vector
 Uredu=dHatLinear(index);
-Kdist2 = KDist(index,index);
-[ Ep2 ] = Sensitivity(Kdist2,delta,Uredu );
-Ep2
+[ Ep ] = Sensitivity(KDist,delta,Uredu);
+Ep
 figure(10)
 surface(KDist);
 figure(11)
 surface(StiffnessMatrix);
-figure(12)
-surface(StiffnessMatrix2);
 
 %% Postprocessing
 graph.index = plot_postprocIGAKirchhoffLoveShellLinear(BSplinePatch,dHatLinear,graph,'outputEnabled');

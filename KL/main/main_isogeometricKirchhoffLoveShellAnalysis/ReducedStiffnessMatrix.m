@@ -1,6 +1,6 @@
 
 %takes 
-function [K,F,minElArea,KDist] = ReducedStiffnessMatrix(BSplinePatch,t,Position)
+function [K,F,minElArea,KDist,Kindex] = ReducedStiffnessMatrix(BSplinePatch,t,Position)
 %% Function documentation
 %
 % Returns the stiffness matrix and the load vector for the linear 
@@ -230,13 +230,16 @@ for j = q+1:meta-q-1
                     EFT(k+1) = DOFNumbering(cpi,cpj,2);
                     EFT(k+2) = DOFNumbering(cpi,cpj,3);
                     % Update counter
-                    if (EFT(k)==InterestX ) | (EFT(k+1)==InterestY ) | (EFT(k+2)==InterestZ )
-                        flag=true;
-                    end
+                   
                     k = k + 3;
                 end
             end
-            
+            %% check if the components of the desired Control point are in
+            % the components array
+            findxyz= ismember([InterestX InterestY InterestZ],EFT);
+            if any(findxyz(:)>0)
+                flag=true;
+            end
             %% 3iii. Initialize the element area
             elementArea = 0;
             elementAreaDist=0;
@@ -287,9 +290,7 @@ for j = q+1:meta-q-1
                     K(EFT,EFT) = K(EFT,EFT) + KeOnGP*elementAreaOnGP;
                     if flag==true
                         KDist(EFT,EFT) = KDist(EFT,EFT) + KeOnGPDist*elementAreaOnGPDist;
-                        KDist(EFT,EFT)=KDist(EFT,EFT)-K(EFT,EFT);
-                    else 
-                        KDist(EFT,EFT) = KDist(EFT,EFT) ;
+                        KDist(EFT,EFT)=KDist(EFT,EFT)-K(EFT,EFT);                    
                     end
                     
                 end
@@ -302,6 +303,12 @@ for j = q+1:meta-q-1
     end
 end
 
+%% Find rows different to zero
+Kdim=any(KDist,1);
+%get the indices of non zero elements
+Kindex=find(Kdim);
+%resize the matrix
+KDist=KDist(Kindex,Kindex);
 %% 4. Compute the exernally applied load vector
 F = zeros(noDOFs,1);
 for counterNBC = 1:NBC.noCnd
