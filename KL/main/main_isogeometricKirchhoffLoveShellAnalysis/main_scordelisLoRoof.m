@@ -247,8 +247,8 @@ graph.index = graph.index + 1;
 %modify the control points as desired
 
 delta=0.0001;%this is the increment used to calculate the new CP
-vector=[0,0,1];%direction of the distortion
-CP2Dist=[1 1];%control pint to disturb
+vector=[1,1,1];%direction of the distortion
+CP2Dist=[2 3];%control pint to disturb
 %returns the BSPLINEPATCH with the modified control points stored in the
 %variable CPd
 [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta);
@@ -262,13 +262,10 @@ CP2Dist=[1 1];%control pint to disturb
     (BSplinePatch,solve_LinearSystem,'');
 
 %% Advance FEM: here the sensitivity is computed
-%computes the sensitivity with the whole matrix
-[ Ep ] = Sensitivity( KDist,delta,dHatLinear );
-Ep
+
 %creates the reduced matrix and vector
 Uredu=dHatLinear(index);
-Kdist2 = KDist(index,index);
-[ Ep2 ] = Sensitivity(Kdist2,delta,Uredu );
+[ Ep2 ] = Sensitivity(KDist,delta,Uredu );
 Ep2
 figure(10)
 surface(KDist);
