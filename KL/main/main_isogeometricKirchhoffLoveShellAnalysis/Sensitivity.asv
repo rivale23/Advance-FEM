@@ -1,0 +1,23 @@
+function [ Ep ] = Sensitivity( Kdelta,delta,U,Position )
+%SENSITIVITY computes the sensitivity of the desired Control points
+%gets the array of Kdelta and for the several control points with the whole
+%dimension of the matrix and gets the whole U. and will return an array of
+%all the sensitivities
+
+%reduces each matrix by deleting all the zero entries
+%gets the length of the vector of positions
+NoDV=size(Position,1);
+for ii=1:NoDV
+    Kdim=any(Kdelta(:,:,ii),1);
+    %get the indices of non zero elements
+    Kindex=find(Kdim);
+    %resize the matrix
+    KD=Kdelta(Kindex,Kindex,ii);
+end
+
+Kp=(Kdelta)./delta;
+
+Ep=((-Kp*U)'*U)./2;
+
+end
+

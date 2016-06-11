@@ -1,6 +1,6 @@
 
 %takes 
-function [K,F,minElArea,KDist,Kindex] = ReducedStiffnessMatrix(BSplinePatch,t,Position)
+function [KDist] = ReducedStiffnessMatrix(BSplinePatch,Position)
 %% Function documentation
 %
 % Returns the stiffness matrix and the load vector for the linear 
@@ -137,9 +137,6 @@ parameters = BSplinePatch.parameters;
 int = BSplinePatch.int;
 DOFNumbering = BSplinePatch.DOFNumbering;
 
-InterestX=DOFNumbering(Position(1),Position(2),1)
-InterestY=DOFNumbering(Position(1),Position(2),2)
-InterestZ=DOFNumbering(Position(1),Position(2),3)
 % Neuman boundary conditions
 NBC = BSplinePatch.NBC;
 
@@ -168,8 +165,21 @@ noDOFs = 3*nxi*neta;
 
 % Initialize global stiffness matrix
 K  = zeros(noDOFs,noDOFs);
+
+%% gets the number of the design variables
+NoDV=size(Position,1);
+%creates the array to save the stiffness matrix
 KDist  = zeros(noDOFs,noDOFs);
 
+%% gets the vector of the DOF related with each control point
+InterestX=zeros(1,NoDV);
+InterestY=InterestX;
+InterestZ=InterestX;
+for i=1:NoDV    
+    InterestX(i)=DOFNumbering(Position(i,1),Position(i,2),1);
+    InterestY(i)=DOFNumbering(Position(i,1),Position(i,2),2);
+    InterestZ(i)=DOFNumbering(Position(i,1),Position(i,2),3);
+end
 %% 1. Compute the material matrices
 
 % Compute the membrane material matrix
@@ -222,7 +232,7 @@ for j = q+1:meta-q-1
             % initialize counter
             k = 1;
             
-            flag=false;
+
             % relation global-local dof
             for cpj = j-q:j
                 for cpi = i-p:i
@@ -235,10 +245,13 @@ for j = q+1:meta-q-1
                 end
             end
             %% check if the components of the desired Control point are in
-            % the components array
-            findxyz= ismember([InterestX InterestY InterestZ],EFT);
-            if any(findxyz(:)>0)
-                flag=true;
+            % the components array for each control point            
+            flag=false;
+            for ii=1:NoDV                
+                findxyz= ismember([InterestX(ii) InterestY(ii) InterestZ(ii)],EFT);
+                if any(findxyz>0)
+                    flag=true;
+                end
             end
             %% 3iii. Initialize the element area
             elementArea = 0;
@@ -272,26 +285,25 @@ for j = q+1:meta-q-1
                     elementAreaOnGP = dA*detJxiu*xiGW(cXi)*etaGW(cEta);
                     elementArea = elementArea + elementAreaOnGP;                    
                    
-                    
-                    
-                    %% Compute distorted Stiffness matrix only if the flag is active
-                    if flag==true
-                        dRDist = computeIGABasisFunctionsAndDerivativesForSurface(i,p,xi,Xi,j,q,eta,Eta,CPDist,isNURBS,nDrvBasis);
-                        [dG1Dist,dG2Dist] = computeBaseVectorsAndDerivativesForBSplineSurface(i,p,j,q,CPDist,nDrvBaseVct,dRDist);
-                        G3TildeDist = cross(dG1Dist(:,1),dG2Dist(:,1));
-                        dADist = norm(G3TildeDist);
-                        KeOnGPDist = computeElStiffMtxKirchhoffLoveShellLinear(p,q,dR,[dG1Dist(:,1) dG2Dist(:,1)],[dG1Dist(:,2) dG2Dist(:,2) dG1Dist(:,3)],G3TildeDist,Dm,Db);
-                        elementAreaOnGPDist = dADist*detJxiu*xiGW(cXi)*etaGW(cEta);
-                        elementAreaDist = elementAreaDist + elementAreaOnGPDist; 
-                    end
-                    
-                    
                     %% 3iv.8. Add the contribution from the Gauss Point
                     K(EFT,EFT) = K(EFT,EFT) + KeOnGP*elementAreaOnGP;
-                    if flag==true
-                        KDist(EFT,EFT) = KDist(EFT,EFT) + KeOnGPDist*elementAreaOnGPDist;
-                        KDist(EFT,EFT)=KDist(EFT,EFT)-K(EFT,EFT);                    
-                    end
+                                        
+                    %% Compute distorted Stiffness matrix only if the flag is active
+                        if flag==true
+                            dRDist = computeIGABasisFunctionsAndDerivativesForSurface(i,p,xi,Xi,j,q,eta,Eta,CPDist,isNURBS,nDrvBasis);
+                            [dG1Dist,dG2Dist] = computeBaseVectorsAndDerivativesForBSplineSurface(i,p,j,q,CPDist,nDrvBaseVct,dRDist);
+                            G3TildeDist = cross(dG1Dist(:,1),dG2Dist(:,1));
+                            dADist = norm(G3TildeDist);
+                            KeOnGPDist = computeElStiffMtxKirchhoffLoveShellLinear(p,q,dR,[dG1Dist(:,1) dG2Dist(:,1)],[dG1Dist(:,2) dG2Dist(:,2) dG1Dist(:,3)],G3TildeDist,Dm,Db);
+                            elementAreaOnGPDist = dADist*detJxiu*xiGW(cXi)*etaGW(cEta);
+                            elementAreaDist = elementAreaDist + elementAreaOnGPDist; 
+                            %computes the stiffness matrix
+                            KDist(EFT,EFT) = KDist(EFT,EFT) + KeOnGPDist*elementAreaOnGPDist;
+                            %Computes the difference of the disturbed minus
+                            %the orginal atrix
+                            KDist(EFT,EFT)=KDist(EFT,EFT)-K(EFT,EFT);
+                        end
+
                     
                 end
             end
@@ -301,22 +313,6 @@ for j = q+1:meta-q-1
             end
         end
     end
-end
-
-%% Find rows different to zero
-Kdim=any(KDist,1);
-%get the indices of non zero elements
-Kindex=find(Kdim);
-%resize the matrix
-KDist=KDist(Kindex,Kindex);
-%% 4. Compute the exernally applied load vector
-F = zeros(noDOFs,1);
-for counterNBC = 1:NBC.noCnd
-    funcHandle = str2func(NBC.computeLoadVct{counterNBC});
-    F = funcHandle(F,NBC.xiLoadExtension{counterNBC},...
-        NBC.etaLoadExtension{counterNBC},p,q,Xi,Eta,CP,isNURBS,...
-        NBC.loadAmplitude{counterNBC},...
-        NBC.loadDirection(counterNBC,1),t,int,'');
 end
 
 end
