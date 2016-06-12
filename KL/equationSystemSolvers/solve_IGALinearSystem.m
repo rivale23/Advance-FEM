@@ -260,7 +260,7 @@ if strcmp(outMsg,'outputEnabled')
     end
     condK = cond(stiffMtx(freeDOFs,freeDOFs));
     fprintf(strcat(tab,'>> The condition number of the system is %d\n'),condK); 
-    [~,eigVal] = eig(stiffMtx(freeDOFs,freeDOFs));
+    [a,eigVal] = eig(stiffMtx(freeDOFs,freeDOFs));
     eigVal(~eigVal) = Inf;
     minEig = min(min(eigVal));
     fprintf(strcat(tab,'>> The minimum eigenvalue of the system is %d\n'),minEig); 

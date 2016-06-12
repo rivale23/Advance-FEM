@@ -216,7 +216,10 @@ BSplinePatch = fillUpPatch...
 
 
 %% Advance FEM: here The control points can be modified to change the shape here.
-[BSplinePatch]=ModifyCps( BSplinePatch,':2:3',0 );
+magnitude=0
+vector=[0,0,1];%direction of the distortion
+CP2Dist=[1 1; 2 2];%control pint to disturb
+[BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,magnitude,0);
 
 
 %% Compute the load vectors for each patch (only for the visualization)
@@ -247,13 +250,14 @@ graph.index = graph.index + 1;
 %modify the control points as desired
 
 delta=0.0001;%this is the increment used to calculate the new CP
-vector=[1,1,1];%direction of the distortion
-CP2Dist=[2 3];%control pint to disturb
+%vector=[0,0,1];%direction of the distortion
+%CP2Dist=[1 1; 2 2];%control pint to disturb
 %returns the BSPLINEPATCH with the modified control points stored in the
 %variable CPd
-[BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta);
+[BSplinePatch2]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);
 
-[KDist]=ReducedStiffnessMatrix(BSplinePatch,CP2Dist);
+
+[KDist2,kor2,dindex]=ReducedStiffnessMatrix(BSplinePatch2,CP2Dist);
 
 %% Attention!!!! the function ReducedStiffnessMatrix needs to replacethe original function, send all the requiered arguments
 
@@ -262,14 +266,31 @@ CP2Dist=[2 3];%control pint to disturb
     (BSplinePatch,solve_LinearSystem,'');
 
 %% Advance FEM: here the sensitivity is computed
+% BSplinePatches=BSplinePatch;
+% BSplinePatches.CP=BSplinePatch2.CPd
+% [stiffMtx,w,q]=...
+%     computeStiffMtxAndLoadVctIGAKirchhoffLoveShellLinear(0,0,...
+%             0,0,0,BSplinePatches,0,...
+%             0,0,0,0,...
+%             0,0);
+%     
 
-%creates the reduced vector
-[ Ep ] = Sensitivity(KDist,delta,dHatLinear);
+[ Ep ] = Sensitivity(StiffnessMatrix,KDist2,delta,dHatLinear,dindex);
 Ep
-figure(10)
-surface(KDist);
-figure(11)
-surface(StiffnessMatrix);
+
+% t1=stiffMtx(dindex,dindex)-KDist2(dindex,dindex);
+% figure(10)
+% t1=StiffnessMatrix-kor2;
+% surface(t1);
+% figure(11)
+% t2=stiffMtx-kor2;
+% surface(t2);
+figure(12)
+t3=KDist2-kor2;
+surface(t3);
+% figure(13)
+% t4=t3-t2;
+% surface(t4);
 
 %% Postprocessing
 graph.index = plot_postprocIGAKirchhoffLoveShellLinear(BSplinePatch,dHatLinear,graph,'outputEnabled');

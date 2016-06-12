@@ -1,4 +1,4 @@
-function [ ModifiedBspline ] = ModifyCps( BSplinepatch,DesiredCPs ,delta)
+function [ ModifiedBspline ] = ModifyCps( BSplinepatch,DesiredCPs ,delta, s)
 
 %   read all the desired CPs from the DesiredCPs variable and modify all of
 %   them

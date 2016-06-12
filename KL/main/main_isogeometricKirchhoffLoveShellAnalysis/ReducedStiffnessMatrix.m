@@ -1,6 +1,6 @@
 
 %takes 
-function [KDist] = ReducedStiffnessMatrix(BSplinePatch,Position)
+function [KDist,K,EFTDist] = ReducedStiffnessMatrix(BSplinePatch,Position)
 %% Function documentation
 %
 % Returns the stiffness matrix and the load vector for the linear 
@@ -170,6 +170,7 @@ K  = zeros(noDOFs,noDOFs);
 NoDV=size(Position,1);
 %creates the array to save the stiffness matrix
 KDist  = zeros(noDOFs,noDOFs);
+KDiff  = zeros(noDOFs,noDOFs);
 
 %% gets the vector of the DOF related with each control point
 InterestX=zeros(1,NoDV);
@@ -209,6 +210,10 @@ end
 [xiGP,xiGW] = getGaussPointsAndWeightsOverUnitDomain(xiNGP);
 [etaGP,etaGW] = getGaussPointsAndWeightsOverUnitDomain(etaNGP);
 
+%% check wich elements will be affected
+%vector to save the degrees of freedom affected by the selected node
+EFTDist=[];
+
 %% 3. loops over elements
 for j = q+1:meta-q-1
     for i = p+1:mxi-p-1
@@ -232,15 +237,13 @@ for j = q+1:meta-q-1
             % initialize counter
             k = 1;
             
-
             % relation global-local dof
             for cpj = j-q:j
                 for cpi = i-p:i
                     EFT(k) = DOFNumbering(cpi,cpj,1);
                     EFT(k+1) = DOFNumbering(cpi,cpj,2);
                     EFT(k+2) = DOFNumbering(cpi,cpj,3);
-                    % Update counter
-                   
+                    % Update counter                   
                     k = k + 3;
                 end
             end
@@ -251,6 +254,8 @@ for j = q+1:meta-q-1
                 findxyz= ismember([InterestX(ii) InterestY(ii) InterestZ(ii)],EFT);
                 if any(findxyz>0)
                     flag=true;
+                    EFTDist=[EFTDist EFT];
+                    EFTDist=unique(EFTDist);
                 end
             end
             %% 3iii. Initialize the element area
@@ -286,25 +291,27 @@ for j = q+1:meta-q-1
                     elementArea = elementArea + elementAreaOnGP;                    
                    
                     %% 3iv.8. Add the contribution from the Gauss Point
-                    K(EFT,EFT) = K(EFT,EFT) + KeOnGP*elementAreaOnGP;
+                    GaussContribution=KeOnGP*elementAreaOnGP;
+                    K(EFT,EFT) = K(EFT,EFT) + GaussContribution;
                                         
                     %% Compute distorted Stiffness matrix only if the flag is active
+                      
                         if flag==true
                             dRDist = computeIGABasisFunctionsAndDerivativesForSurface(i,p,xi,Xi,j,q,eta,Eta,CPDist,isNURBS,nDrvBasis);
                             [dG1Dist,dG2Dist] = computeBaseVectorsAndDerivativesForBSplineSurface(i,p,j,q,CPDist,nDrvBaseVct,dRDist);
                             G3TildeDist = cross(dG1Dist(:,1),dG2Dist(:,1));
                             dADist = norm(G3TildeDist);
-                            KeOnGPDist = computeElStiffMtxKirchhoffLoveShellLinear(p,q,dR,[dG1Dist(:,1) dG2Dist(:,1)],[dG1Dist(:,2) dG2Dist(:,2) dG1Dist(:,3)],G3TildeDist,Dm,Db);
+                            KeOnGPDist = computeElStiffMtxKirchhoffLoveShellLinear(p,q,dRDist,[dG1Dist(:,1) dG2Dist(:,1)],[dG1Dist(:,2) dG2Dist(:,2) dG1Dist(:,3)],G3TildeDist,Dm,Db);
                             elementAreaOnGPDist = dADist*detJxiu*xiGW(cXi)*etaGW(cEta);
                             elementAreaDist = elementAreaDist + elementAreaOnGPDist; 
                             %computes the stiffness matrix
                             KDist(EFT,EFT) = KDist(EFT,EFT) + KeOnGPDist*elementAreaOnGPDist;
-                            %Computes the difference of the disturbed minus
-                            %the orginal atrix
-                            KDist(EFT,EFT)=KDist(EFT,EFT)-K(EFT,EFT);
-                        end
-
-                    
+                            %KDist(EFT,EFT)=KDist(EFT,EFT)-GaussContribution;
+                            %KDist(EFT,EFT)=KDist(EFT,EFT)-K(EFT,EFT)
+                        else 
+                            %EFT2=EFT(ismember(EFT,EFTDist));
+                            KDist(EFT,EFT)=KDist(EFT,EFT)+GaussContribution;
+                        end                    
                 end
             end
             %% 3v. Find the minimum element area in the mesh
@@ -314,5 +321,6 @@ for j = q+1:meta-q-1
         end
     end
 end
+%KDist(EFTDist,EFTDist)=KDist(EFTDist,EFTDist)-K(EFTDist,EFTDist)
 
 end

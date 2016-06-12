@@ -1,4 +1,4 @@
-function [ BSplinePatchDist ] = CPDisturbance( BSplinePatch, Position, Direction, Magnitude )
+function [ BSplinePatchDist ] = CPDisturbance( BSplinePatch, Position, Direction, Magnitude,s )
 %CPDISTURBANCE 
 %gets the length of the vector of positions
 count=size(Position,1);
@@ -34,7 +34,14 @@ for i=1:count
     CPs(Position(i,1),Position(i,2),3)=CPmod(i,3);
 end
 BSplinePatchDist=BSplinePatch;
-BSplinePatchDist.CPd=CPs;
+
+if(s==1)
+    
+    BSplinePatchDist.CPd=CPs;
+else
+    BSplinePatchDist.CP=CPs;
+end
+
 
 
 
