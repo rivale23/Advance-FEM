@@ -6,7 +6,7 @@ function [ Ep_final, RelErr, Ep_history, delta_history, dHatLinear ] = Sensitivi
 
 RelErr = inf; % initial relative error
 EpOld = inf; % initial EpOld
-delta = 0.01; % initial delta for finite differences
+delta = 0.001; % initial delta for finite differences
 iteration_count = 0;
 
 Ep_history = [];
@@ -21,7 +21,7 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user
 
     %% Attention!!!! the function ReducedStiffnessMatrix needs to replace the original function, send all the requiered arguments
     %% -------------------------------------
-    [dHatLinear,F,minElArea,StiffnessMatrix] = solve_IGAKirchhoffLoveShellLinear...
+    [dHatLinear,~,~] = solve_IGAKirchhoffLoveShellLinear...
         (BSplinePatch,solve_LinearSystem,'');
 
     [ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);

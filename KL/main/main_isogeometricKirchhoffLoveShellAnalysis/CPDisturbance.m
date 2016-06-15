@@ -7,8 +7,8 @@ Y=X;
 Z=X;
 %gets the values of the components of the desired points
 for i=1:count 
-    xx=Position(i,1)
-    yy=Position(i,2)
+    xx=Position(i,1);
+    yy=Position(i,2);
     X(i)=BSplinePatch.CP(xx,yy,1);  %gets X component
     Y(i)=BSplinePatch.CP(xx,yy,2); %gets y component
     Z(i)=BSplinePatch.CP(xx,yy,3);    %gets z component
@@ -17,7 +17,7 @@ end
 %gets the unit vector
 Disturbance=Direction/norm(Direction);
 
-%sets the magnitud
+%sets the magnitude
 Disturbance=Disturbance.*Magnitude;
 
 %creates a vector with all the modified CPs 
@@ -35,8 +35,7 @@ for i=1:count
 end
 BSplinePatchDist=BSplinePatch;
 
-if(s==1)
-    
+if(s==1)    
     BSplinePatchDist.CPd=CPs;
 else
     BSplinePatchDist.CP=CPs;

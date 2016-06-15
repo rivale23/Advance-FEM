@@ -214,47 +214,13 @@ BSplinePatch = fillUpPatch...
     (analysis,p,Xi,q,Eta,CP,isNURBS,parameters,homDOFs,inhomDOFs,valuesInhomDOFs,...
     weakDBC,cables,NBC,[],[],[],[],[],int);
 
+%% Vectors (direction of allowable change of the CPs)   
 
-%% Advance FEM: here The control points can be modified to change the shape here.
-magnitude=0
-vector=[1,0,0];%direction of the distortion
-CP2Dist=[5 1];%control pint to disturb
-[BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,magnitude,0);
-
-
-%% Compute the load vectors for each patch (only for the visualization)
-FGamma = zeros(3*BSplinePatch.noCPs,1);
-for counterNBC = 1:NBC.noCnd
-    funcHandle = str2func(NBC.computeLoadVct{counterNBC});
-    FGamma = funcHandle...
-        (FGamma,NBC.xiLoadExtension{counterNBC},...
-        NBC.etaLoadExtension{counterNBC},BSplinePatch.p,...
-        BSplinePatch.q,BSplinePatch.Xi,BSplinePatch.Eta,...
-        BSplinePatch.CP,BSplinePatch.isNURBS,NBC.loadAmplitude{counterNBC},...
-        NBC.loadDirection(counterNBC,1),0,BSplinePatch.int,'outputEnabled');
+for i = 1:size(BSplinePatch.CP,1)
+    for j = 1:size(BSplinePatch.CP,2)
+    vectors{i,j} = [0;0;1]; 
+    end
 end
-    
 
-
-%% Plot reference configuration
-figure(graph.index)
-%Advance FEM: to plot the reference shell I just change the argument from
-%CP to BSplinePatch.CP
-plot_referenceConfigurationIGAThinStructure(p,q,Xi,Eta,BSplinePatch.CP,isNURBS,homDOFs,FGamma,'outputEnabled');
-title('Reference configuration for an isogeometric Kirchhoff-Love shell');
-graph.index = graph.index + 1;
-
-RelErrTolerance = 10^(-5);
-
-[Ep_final, RelErr, Ep_history, delta_history, dHatLinear] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,solve_LinearSystem,RelErrTolerance );
-
-figure(9)
-hold on
-semilogx(1./delta_history,Ep_history);
-xlabel('1/delta');
-ylabel('Sensitivity');
-hold off
-
-%% Postprocessing
-graph.index = plot_postprocIGAKirchhoffLoveShellLinear(BSplinePatch,dHatLinear,graph,'outputEnabled');
-title('Linear analysis');
+%% TODO HERE GOES THE WRAPPER!!!
+Smatrix = Sensitivity_wrapper( BSplinePatch, vectors );
