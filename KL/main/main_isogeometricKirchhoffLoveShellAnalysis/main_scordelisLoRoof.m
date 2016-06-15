@@ -217,8 +217,8 @@ BSplinePatch = fillUpPatch...
 
 %% Advance FEM: here The control points can be modified to change the shape here.
 magnitude=0
-vector=[0,0,1];%direction of the distortion
-CP2Dist=[1 1; 2 2];%control pint to disturb
+vector=[1,0,0];%direction of the distortion
+CP2Dist=[5 1];%control pint to disturb
 [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,magnitude,0);
 
 
@@ -249,15 +249,18 @@ graph.index = graph.index + 1;
 %sensitivity analysis
 %modify the control points as desired
 
-delta=0.0001;%this is the increment used to calculate the new CP
-%vector=[0,0,1];%direction of the distortion
-%CP2Dist=[1 1; 2 2];%control pint to disturb
+for i=1:60
+    
+delta=0.01/i;%this is the increment used to calculate the new CP, value that converged for several tests
 %returns the BSPLINEPATCH with the modified control points stored in the
 %variable CPd
-[BSplinePatch2]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);
+[BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);
 
 
-[KDist2,kor2,dindex]=ReducedStiffnessMatrix(BSplinePatch2,CP2Dist);
+[KDist,K,dindex]=ReducedStiffnessMatrix(BSplinePatch,CP2Dist);
+
+
+
 
 %% Attention!!!! the function ReducedStiffnessMatrix needs to replacethe original function, send all the requiered arguments
 
@@ -275,9 +278,11 @@ delta=0.0001;%this is the increment used to calculate the new CP
 %             0,0);
 %     
 
-[ Ep ] = Sensitivity(StiffnessMatrix,KDist2,delta,dHatLinear,dindex);
-Ep
-
+[ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);
+EpV(i)=Ep;
+end
+figure(9)
+plot(EpV);
 % t1=stiffMtx(dindex,dindex)-KDist2(dindex,dindex);
 % figure(10)
 % t1=StiffnessMatrix-kor2;
@@ -286,7 +291,7 @@ Ep
 % t2=stiffMtx-kor2;
 % surface(t2);
 figure(12)
-t3=KDist2-kor2;
+t3=KDist-K;
 surface(t3);
 % figure(13)
 % t4=t3-t2;
