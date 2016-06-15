@@ -249,53 +249,53 @@ graph.index = graph.index + 1;
 %sensitivity analysis
 %modify the control points as desired
 
-for i=1:60
+delta = 0.01;
+iteration_count = 0;
+RelErr = inf;
+RelErrTolerance = 10^(-5);
+EpOld = inf;
+
+while (RelErr > RelErrTolerance)
+    iteration_count = iteration_count + 1
     
-delta=0.01/i;%this is the increment used to calculate the new CP, value that converged for several tests
-%returns the BSPLINEPATCH with the modified control points stored in the
-%variable CPd
-[BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);
+    %returns the BSPLINEPATCH with the modified control points stored in the
+    %variable CPd
+    [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);
 
 
-[KDist,K,dindex]=ReducedStiffnessMatrix(BSplinePatch,CP2Dist);
+    [KDist,K,dindex]=ReducedStiffnessMatrix(BSplinePatch,CP2Dist);
 
 
 
 
-%% Attention!!!! the function ReducedStiffnessMatrix needs to replacethe original function, send all the requiered arguments
+    %% Attention!!!! the function ReducedStiffnessMatrix needs to replacethe original function, send all the requiered arguments
+    %% -------------------------------------
+    [dHatLinear,F,minElArea,StiffnessMatrix] = solve_IGAKirchhoffLoveShellLinear...
+        (BSplinePatch,solve_LinearSystem,'');
 
-%% -------------------------------------
-[dHatLinear,F,minElArea,StiffnessMatrix] = solve_IGAKirchhoffLoveShellLinear...
-    (BSplinePatch,solve_LinearSystem,'');
-
-%% Advance FEM: here the sensitivity is computed
-% BSplinePatches=BSplinePatch;
-% BSplinePatches.CP=BSplinePatch2.CPd
-% [stiffMtx,w,q]=...
-%     computeStiffMtxAndLoadVctIGAKirchhoffLoveShellLinear(0,0,...
-%             0,0,0,BSplinePatches,0,...
-%             0,0,0,0,...
-%             0,0);
-%     
-
-[ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);
-EpV(i)=Ep;
+    [ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);
+    EpV(iteration_count)=Ep;
+    deltaV(iteration_count)=delta;
+    RelErr = abs((Ep - EpOld)/Ep);
+    EpOld = Ep;
+    delta=delta/2;%this is the increment used to calculate the new CP, value that converged for several tests
+    if (delta < 10^6*eps)
+        warning(['sensitivity analysis has not converged up to the given relative error tolerance of ',mat2str(RelErrTolerance),'!\n current error: ',mat2str(RelErr)]);
+        break;
+    end
 end
 figure(9)
-plot(EpV);
-% t1=stiffMtx(dindex,dindex)-KDist2(dindex,dindex);
-% figure(10)
-% t1=StiffnessMatrix-kor2;
-% surface(t1);
-% figure(11)
-% t2=stiffMtx-kor2;
-% surface(t2);
+hold on
+semilogx(1./deltaV,EpV);
+xlabel('1/delta');
+ylabel('Sensitivity');
+hold off
+
 figure(12)
+hold on
 t3=KDist-K;
 surface(t3);
-% figure(13)
-% t4=t3-t2;
-% surface(t4);
+hold off
 
 %% Postprocessing
 graph.index = plot_postprocIGAKirchhoffLoveShellLinear(BSplinePatch,dHatLinear,graph,'outputEnabled');
