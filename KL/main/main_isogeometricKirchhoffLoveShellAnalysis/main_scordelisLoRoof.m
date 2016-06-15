@@ -244,57 +244,15 @@ plot_referenceConfigurationIGAThinStructure(p,q,Xi,Eta,BSplinePatch.CP,isNURBS,h
 title('Reference configuration for an isogeometric Kirchhoff-Love shell');
 graph.index = graph.index + 1;
 
-%% %Advance FEM:  Solve the system applying linear analysis
-%------------------------------------
-%sensitivity analysis
-%modify the control points as desired
-
-delta = 0.01;
-iteration_count = 0;
-RelErr = inf;
 RelErrTolerance = 10^(-5);
-EpOld = inf;
 
-while (RelErr > RelErrTolerance)
-    iteration_count = iteration_count + 1
-    
-    %returns the BSPLINEPATCH with the modified control points stored in the
-    %variable CPd
-    [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);
+[Ep_final, RelErr, Ep_history, delta_history, dHatLinear] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,solve_LinearSystem,RelErrTolerance );
 
-
-    [KDist,K,dindex]=ReducedStiffnessMatrix(BSplinePatch,CP2Dist);
-
-
-
-
-    %% Attention!!!! the function ReducedStiffnessMatrix needs to replacethe original function, send all the requiered arguments
-    %% -------------------------------------
-    [dHatLinear,F,minElArea,StiffnessMatrix] = solve_IGAKirchhoffLoveShellLinear...
-        (BSplinePatch,solve_LinearSystem,'');
-
-    [ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);
-    EpV(iteration_count)=Ep;
-    deltaV(iteration_count)=delta;
-    RelErr = abs((Ep - EpOld)/Ep);
-    EpOld = Ep;
-    delta=delta/2;%this is the increment used to calculate the new CP, value that converged for several tests
-    if (delta < 10^6*eps)
-        warning(['sensitivity analysis has not converged up to the given relative error tolerance of ',mat2str(RelErrTolerance),'!\n current error: ',mat2str(RelErr)]);
-        break;
-    end
-end
 figure(9)
 hold on
-semilogx(1./deltaV,EpV);
+semilogx(1./delta_history,Ep_history);
 xlabel('1/delta');
 ylabel('Sensitivity');
-hold off
-
-figure(12)
-hold on
-t3=KDist-K;
-surface(t3);
 hold off
 
 %% Postprocessing
