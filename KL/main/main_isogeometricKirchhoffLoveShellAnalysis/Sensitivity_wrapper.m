@@ -9,11 +9,17 @@ solve_LinearSystem = @solve_LinearSystemMatlabBackslashSolver;
 
 for i = 1:size(vectors,1)
     for j = 1:size(vectors,2)
-        disp(['calculating sensitivity for CP @ ',mat2str([i,j])]);
         vector=vectors{i,j};%direction of the distortion
-        CP2Dist=[i j];%control pint to disturb         
-        [Ep_final, ~, ~, ~, ~] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,solve_LinearSystem,RelErrTolerance );
-        SensitivityMatrix(i,j) = Ep_final; % save sensitivity to matrix
+        
+        if max(abs(vector)) == 0
+            disp(['sensitivity for CP @',mat2str([i,j]),' not computed.']);
+            SensitivityMatrix(i,j)=0;
+        else
+            disp(['calculating sensitivity for CP @ ',mat2str([i,j])]);                
+            CP2Dist=[i j];%control pint to disturb         
+            [Ep_final, ~, ~, ~, ~] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,solve_LinearSystem,RelErrTolerance );
+            SensitivityMatrix(i,j) = Ep_final; % save sensitivity to matrix
+        end
     end
 end    
 
