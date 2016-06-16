@@ -266,7 +266,7 @@ while eta <= Eta(meta)+tol
             BV = [dA1(:,2) dA2(:,2) dA1(:,3)]'*A3;
             
             % Compute the B-operator matrices for the rotation vector
-            [BOmega1,BOmega2,a,b] = computePostprocBOperatorMatrix4RotationsIGAKirchhoffLoveShell...
+            [BOmega1,BOmega2,~,~] = computePostprocBOperatorMatrix4RotationsIGAKirchhoffLoveShell...
                 (BDisplacementsGC,dRdxi,dRdeta,A3Tilde,dA3,AContravariant,BV);
             
             % Compute the rotation vector in the covariant basis
