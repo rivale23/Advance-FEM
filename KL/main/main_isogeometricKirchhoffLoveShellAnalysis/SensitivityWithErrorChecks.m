@@ -32,11 +32,10 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
     
     %returns the BSPLINEPATCH with the modified control points stored in the
     %variable CPd
-    [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);
-    [KDist,K,dindex]=ReducedStiffnessMatrix(BSplinePatch,CP2Dist);
-    
-    [dHatLinear,~,~] = solve_IGAKirchhoffLoveShellLinear...
-        (BSplinePatch,solve_LinearSystem,'');
+    [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);       
+            
+    [dHatLinear,K,KDist,dindex] = solve_IGAKirchhoffLoveShellLinear_shortcut...
+        (BSplinePatch,CP2Dist,solve_LinearSystem);
 
     [ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);
     Ep_history(iteration_count)=Ep;
@@ -55,7 +54,6 @@ end
 
 Ep_final = Ep_history(end);
 delta_final = delta_history(end);
-
 
 end
 
