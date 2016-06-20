@@ -1,26 +1,40 @@
-function [ Ep_final, RelErr, Ep_history, delta_history, dHatLinear ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,solve_LinearSystem,RelErrTolerance )
+function [ Ep_final, delta_final, RelErr, Ep_history, delta_history, dHatLinear ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,solve_LinearSystem,RelErrTolerance,delta_in )
 %SENSITIVITYWITHERRORCHECKS Calculates the sensitivity for a given
 %disturbance in the control points of a BSplinePatch.
+
+switch nargin
+    case 5
+        delta_in = -1;
+    case 6        
+    otherwise
+        error('not enough input arguments!');
+end
+        
 
 %% %Advance FEM:  Solve the system applying linear analysis
 
 RelErr = inf; % initial relative error
 EpOld = inf; % initial EpOld
-delta = 0.001; % initial delta for finite differences
-iteration_count = 0;
+
+if delta_in < 0 % use default delta and find optimal delta iteratively
+    delta = 0.001; % initial delta for finite differences
+    do_not_iterate = 0; % iterate until error bounds are met
+else % use given delta
+    delta = delta_in; % use input delta
+    do_not_iterate = 1; % just do one iteration, then break
+end
 
 Ep_history = [];
+iteration_count = 0;  
 
-while (RelErr > RelErrTolerance) % check if error meets the demands of the user
+while (RelErr > RelErrTolerance) % check if error meets the demands of the user or iteration is prohibited
     iteration_count = iteration_count + 1;
     
     %returns the BSPLINEPATCH with the modified control points stored in the
     %variable CPd
     [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);
     [KDist,K,dindex]=ReducedStiffnessMatrix(BSplinePatch,CP2Dist);
-
-    %% Attention!!!! the function ReducedStiffnessMatrix needs to replace the original function, send all the requiered arguments
-    %% -------------------------------------
+    
     [dHatLinear,~,~] = solve_IGAKirchhoffLoveShellLinear...
         (BSplinePatch,solve_LinearSystem,'');
 
@@ -34,9 +48,13 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user
         warning(['sensitivity analysis has not converged up to the given relative error tolerance of ',mat2str(RelErrTolerance),'!\n current error: ',mat2str(RelErr)]);
         break;
     end
+    if do_not_iterate % if iteration is prohibited just take the first iteration for the final result
+        break;
+    end
 end
 
 Ep_final = Ep_history(end);
+delta_final = delta_history(end);
 
 
 end
