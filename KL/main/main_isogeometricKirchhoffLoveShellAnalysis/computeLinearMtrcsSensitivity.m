@@ -1,6 +1,10 @@
 
 %takes 
-function [K,KDist,F,EFTDist,minElArea] = computeLinearMtrcsSensitivity(BSplinePatch,disturbed_cp,t)
+function [K,KDist,F,EFTDist,minElArea] = computeLinearMtrcsSensitivity(BSplinePatch,disturbed_cp)
+
+if isempty(disturbed_cp)
+    disturbed_cp = [1,1];
+end
 
 %% 0. Read input
 
@@ -190,14 +194,16 @@ for elj = q+1:meta-q-1
     end
 end
 
-%% 4. Compute the exernally applied load vector
 F = zeros(noDOFs,1);
+
+%% 4. Compute the exernally applied load vector
+t = 0;    
 for counterNBC = 1:NBC.noCnd
     funcHandle = str2func(NBC.computeLoadVct{counterNBC});
     F = funcHandle(F,NBC.xiLoadExtension{counterNBC},...
         NBC.etaLoadExtension{counterNBC},p,q,Xi,Eta,CP,isNURBS,...
         NBC.loadAmplitude{counterNBC},...
         NBC.loadDirection(counterNBC,1),t,int,'');
-end  
+end
 
 end

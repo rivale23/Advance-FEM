@@ -20,7 +20,7 @@
 function [u,stiffMtx,stiffMtx_disturbed,dindex] = solve_IGALinearSystem_shortcut...
     (BSplinePatch,Position,u,...
     freeDOFs,homDOFs,inhomDOFs,valuesInhomDOFs,...
-    solve_LinearSystem,t)
+    solve_LinearSystem)
 %% Function documentation
 %
 % Returns the solution to a linear system which correspond to the
@@ -39,7 +39,7 @@ function [u,stiffMtx,stiffMtx_disturbed,dindex] = solve_IGALinearSystem_shortcut
 %% Function main body
 
 %% 1. compute stiffness matrix and disturbed stiffness matrix
-[stiffMtx,stiffMtx_disturbed,RHS,dindex,~] = computeLinearMtrcsSensitivity(BSplinePatch,Position,t);
+[stiffMtx,stiffMtx_disturbed,RHS,dindex,~] = computeLinearMtrcsSensitivity(BSplinePatch,Position);
 
 %% 2. Update the right-hand side vector if inhomogeneous Dirichlet boundary conditions are encountered
 if norm(valuesInhomDOFs(inhomDOFs)) ~= 0

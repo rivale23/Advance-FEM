@@ -1,4 +1,4 @@
-function [ Ep_final, delta_final, RelErr, Ep_history, delta_history, dHatLinear ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,solve_LinearSystem,RelErrTolerance,delta_in )
+function [ Ep_final, delta_final, RelErr, Ep_history, delta_history ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,dHatLinear,RelErrTolerance,delta_in )
 %SENSITIVITYWITHERRORCHECKS Calculates the sensitivity for a given
 %disturbance in the control points of a BSplinePatch.
 
@@ -32,12 +32,13 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
     
     %returns the BSPLINEPATCH with the modified control points stored in the
     %variable CPd
-    [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);       
-            
-    [dHatLinear,K,KDist,dindex] = solve_IGAKirchhoffLoveShellLinear_shortcut...
-        (BSplinePatch,CP2Dist,solve_LinearSystem);
-
+    
+    [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);      
+    
+    [K,KDist,~,dindex,~] = computeLinearMtrcsSensitivity(BSplinePatch,CP2Dist);           
+    
     [ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);
+    
     Ep_history(iteration_count)=Ep;
     delta_history(iteration_count)=delta;
     RelErr = abs((Ep - EpOld)/Ep);

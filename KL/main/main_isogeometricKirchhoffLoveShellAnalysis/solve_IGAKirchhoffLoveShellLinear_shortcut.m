@@ -37,8 +37,6 @@ function [dHat,stiffMtx,stiffMtx_disturbed,dindex] = solve_IGAKirchhoffLoveShell
 
 %% 0. Read input
 
-t = 0;
-
 % Re-assign the arrays
 CP = BSplinePatch.CP;
 
@@ -89,6 +87,6 @@ dHat = zeros(noDOFs,1);
 [dHat,stiffMtx,stiffMtx_disturbed,dindex] = solve_IGALinearSystem_shortcut...
     (BSplinePatch,Position,dHat,...
     freeDOFs,homDOFs,inhomDOFs,valuesInhomDOFs,...
-    solve_LinearSystem,t);
+    solve_LinearSystem);
 
 end

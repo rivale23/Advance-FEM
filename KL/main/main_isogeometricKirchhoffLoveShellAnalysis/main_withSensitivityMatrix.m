@@ -223,4 +223,6 @@ for i = 1:size(BSplinePatch.CP,1)
 end
 
 %% TODO HERE GOES THE WRAPPER!!!
+tic
 Smatrix = Sensitivity_wrapper( BSplinePatch, vectors );
+toc
