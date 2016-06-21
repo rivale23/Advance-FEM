@@ -22,6 +22,7 @@ if delta_in < 0 % use default delta and find optimal delta iteratively
 else % use given delta
     delta = delta_in; % use input delta
     do_not_iterate = 1; % just do one iteration, then break
+    print('Computing delta');
 end
 
 Ep_history = [];
@@ -35,7 +36,7 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
     
     [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);      
     
-    [K,KDist,~,dindex,~] = computeLinearMtrcsSensitivity(BSplinePatch,CP2Dist);           
+    [K,KDist,a,dindex,b] = computeLinearMtrcsSensitivity(BSplinePatch,CP2Dist);           
     
     [ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);
     
