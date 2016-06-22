@@ -14,7 +14,7 @@ dHatLinear = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSys
 delta = -1; % initial finite difference delta equal to -1 allows iteration for the first CP, other control points use this delta to save computation time
 
 for i = 1:size(vectors,1)
-    for j = 1:size(vectors,2)
+    for j = 1:size(vectors,2)        
         vector=vectors{i,j};%direction of the distortion
         for d = 1:3
             vector_component = zeros(size(vector));

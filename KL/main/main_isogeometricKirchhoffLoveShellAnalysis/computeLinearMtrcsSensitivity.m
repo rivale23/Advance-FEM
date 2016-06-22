@@ -31,8 +31,6 @@ else
     minElArea = CPDist(1,1,1)-CPDist(1,neta,1);
 end
 
-% Local number of DOFs per element
-noDOFsEl = 3*(p+1)*(q+1);
 % Global number of DOFs
 noDOFs = 3*nxi*neta;
 
@@ -83,90 +81,33 @@ for k = 1:numel(cpi_span)
 end 
 
 for elj = q+1:meta-q-1
-    for eli = p+1:mxi-p-1
-        % check if element is greater than zero
-        if Xi(eli+1)~=Xi(eli) && Eta(elj+1)~=Eta(elj)
-            
-            element = BSplinePatch.elements{eli-p,elj-q};
-            
-            %% 3i. Compute the determinant of the Jacobian to the transformation from the NURBS space (xi-eta) to the integration domain [-1,1]x[-1,1] 
-            %
-            %         | xi_i+1 - xi_i                    |
-            %         | -------------            0       |
-            %         |        2                         |
-            %  xi,u = |                                  |
-            %         |                  eta_j+1 - eta_j |
-            %         |        0         --------------- |
-            %         |                          2       |
-            detJxiu = (Xi(eli+1)-Xi(eli))*(Eta(elj+1)-Eta(elj))/4;
-            
-            %% 3ii. Create the Element Freedom Table
-            
-            % Read element freedom table
-            EFT = element.EFT;                       
-            
-            % check if the element holds the disturbed DOF (i,j)
-            if any((eli-p:eli)==disturbed_cp(1)) && ...
-                any((elj-q:elj)==disturbed_cp(2))
-                flag=true;
-            else
-                flag=false;
-            end                                  
-            
-            if flag % only recompute element stiffness matrix, if distortion on element occours
-                
-                %% 3iii. Initialize the element area            
-                elementAreaDist=0;
-                            
-                %% 3iv. Loop over all the Gauss Points
-                
-                % initialize element stiffness matrix
-                K_local = zeros(noDOFsEl);
-                
-                for cEta = 1:etaNGP
-                    for cXi = 1:xiNGP
-                        %% 3iv.1. Compute the NURBS coordinates u,v of the Gauss Point coordinates in the bi-unit interval [-1, 1]
-                        xi = ( Xi(eli+1)+Xi(eli) + xiGP(cXi)*(Xi(eli+1)-Xi(eli)) )/2;
-                        eta = ( Eta(elj+1)+Eta(elj) + etaGP(cEta)*(Eta(elj+1)-Eta(elj)) )/2;
-
-                        %% 3iv.2. Compute the NURBS basis function and up to their second derivatives at the Gauss Point
-                        nDrvBasis = 2;
-                        dR = computeIGABasisFunctionsAndDerivativesForSurface(eli,p,xi,Xi,elj,q,eta,Eta,CPDist,isNURBS,nDrvBasis);                    
-
-                        %% 3iv.3. Compute the covariant base vectors and their first derivatives
-                        nDrvBaseVct = 1;
-                        [dG1,dG2] = computeBaseVectorsAndDerivativesForBSplineSurface(eli,p,elj,q,CPDist,nDrvBaseVct,dR);
-
-                        %% 3iv.4. Compute the surface normal (third covariant base vector not normalized)
-                        G3Tilde = cross(dG1(:,1),dG2(:,1));
-
-                        %% 3iv.5. Compute the legth of G3Tilde (= area dA)
-                        dA = norm(G3Tilde);
-
-                        %% 3iv.6. Compute the element stiffness matrix at the Gauss point
-                        KeOnGP = computeElStiffMtxKirchhoffLoveShellLinear(p,q,dR,[dG1(:,1) dG2(:,1)],[dG1(:,2) dG2(:,2) dG1(:,3)],G3Tilde,Dm,Db);
-
-                        %% 3iv.7 Compute the element area on the Gauss Point and add the contribution
-                        elementAreaOnGP = dA*detJxiu*xiGW(cXi)*etaGW(cEta);
-                        elementAreaDist = elementAreaDist + elementAreaOnGP;                  
-
-                        %% 3iv.8. Add the contribution from the Gauss Point
-                        GaussContribution=KeOnGP*elementAreaOnGP;
-                        K_local = K_local + GaussContribution;                                                                                                                 
-                    end
-                end                                
-                
-            else % otherwise reuse precomputed element matrix
-                elementAreaDist = element.elementArea;
-                K_local = element.K_local;                
-            end
-            KDist(EFT,EFT) = KDist(EFT,EFT) + K_local;
-            
-            %% 3v. Find the minimum element area in the mesh
-            if elementAreaDist<minElArea
-                minElArea = elementAreaDist;
-            end
+    for eli = p+1:mxi-p-1                
+        %% 3i. Read precomputed quantities
+        element = BSplinePatch.elements{eli-p,elj-q};            
+        % Read element freedom table
+        EFT = element.EFT;                                       
+        
+        %% 3ii. check if the element holds the disturbed DOF (i,j)
+        if any((eli-p:eli)==disturbed_cp(1)) && ...
+            any((elj-q:elj)==disturbed_cp(2))
+            flag=true;
+        else
+            flag=false;
+        end 
+        
+        %% 3iii. reuse or recompute element stiffness matrix                
+        if flag % only recompute element stiffness matrix, if distortion on element occours                
+            [ K_local, elementAreaDist ] = computeElementStiffnessMatrix(eli,p,Xi,elj,q,Eta,CPDist,isNURBS,xiNGP,xiGP,xiGW,etaNGP,etaGP,etaGW,Dm,Db);                                            
+        else % otherwise reuse precomputed element matrix
+            elementAreaDist = element.elementArea;
+            K_local = element.K_local;                
         end
+        KDist(EFT,EFT) = KDist(EFT,EFT) + K_local;
+
+        %% 3iv. Find the minimum element area in the mesh
+        if elementAreaDist<minElArea
+            minElArea = elementAreaDist;
+        end        
     end
 end
 

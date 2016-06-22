@@ -37,12 +37,14 @@ for elj = q+1:meta-q-1
         % check if element is greater than zero
         if Xi(eli+1)~=Xi(eli) && Eta(elj+1)~=Eta(elj)
             
+            element = BSplinePatch.elements{eli-p,elj-q};
+            
             %% 1i. Read the Element Freedom Table            
-            EFT = BSplinePatch.elements{eli-p,elj-q}.EFT;
+            EFT = element.EFT;
             
             %% 1ii. Add element contribution to global stiffness matrix
             
-            K_local = BSplinePatch.elements{eli-p,elj-q}.K_local;
+            K_local = element.K_local;
             K_global(EFT,EFT) = K_global(EFT,EFT) + K_local;
             
         end
