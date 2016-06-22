@@ -17,9 +17,9 @@ else
     SensitivityMatrix=zeros(sv,1); 
 end
 solve_LinearSystem = @solve_LinearSystemMatlabBackslashSolver;
-% compute solution once for all sensitivities
-[dHatLinear,b,d,s] = solve_IGAKirchhoffLoveShellLinear_shortcut...
-    (BSplinePatch,[],solve_LinearSystem);
+BSplinePatch = computeElementStiffnessMatrices(BSplinePatch);
+[K_global, F_global] = assembleGlobalSystem(BSplinePatch);
+dHatLinear = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
 
 delta = -1; % initial finite difference delta equal to -1 allows iteration for the first CP, other control points use this delta to save computation time
 
@@ -34,12 +34,12 @@ for i = 1:sv
                 disp(['sensitivity for component ',mat2str(d),' of CP @',mat2str([i,j]),' not computed, because disturbance equal to zero.']);
                 SensitivityMatrix(i,d)=0;
             else    
-                [Ep_final, delta, a, b, c] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector_component,dHatLinear,RelErrTolerance,delta);                
+                [Ep_final, delta, a, b, c] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector_component,dHatLinear,RelErrTolerance,delta);                
                 SensitivityMatrix(i,d)=Ep_final;
             end
         end
     else
-        [Ep_final, delta, a, b, c] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,dHatLinear,RelErrTolerance,delta);                
+        [Ep_final, delta, a, b, c] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector,dHatLinear,RelErrTolerance,delta);                
         SensitivityMatrix(i)=Ep_final;
     end
 end

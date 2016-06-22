@@ -218,7 +218,7 @@ BSplinePatch = fillUpPatch...
 
 for i = 1:size(BSplinePatch.CP,1)
     for j = 1:size(BSplinePatch.CP,2)
-    vectors{i,j} = [0;0;1]; 
+    vectors{i,j} = [1;1;1]; 
     end
 end
 
@@ -226,6 +226,8 @@ end
 tic
 %Smatrix = Sensitivity_wrapper( BSplinePatch, vectors );
 toc
+%Smatrix
+
 
 %% Computes for some control points
 DispVectors{1}=[0 0 1];
