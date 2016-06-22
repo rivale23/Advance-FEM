@@ -1,11 +1,11 @@
-function [ Ep_final, delta_final, RelErr, Ep_history, delta_history ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,dHatLinear,RelErrTolerance,delta_in )
+function [ Ep_final, delta_final, RelErr, Ep_history, delta_history ] = SensitivityWithErrorChecks( BSplinePatch,K,CP2Dist,vector,dHatLinear,RelErrTolerance,delta_in )
 %SENSITIVITYWITHERRORCHECKS Calculates the sensitivity for a given
 %disturbance in the control points of a BSplinePatch.
 
 switch nargin
-    case 5
+    case 6
         delta_in = -1;
-    case 6        
+    case 7        
     otherwise
         error('not enough input arguments!');
 end
@@ -35,7 +35,7 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
     
     [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,delta,1);      
     
-    [K,KDist,~,dindex,~] = computeLinearMtrcsSensitivity(BSplinePatch,CP2Dist);           
+    [KDist, dindex] = computeLinearMtrcsSensitivity(BSplinePatch,CP2Dist);        
     
     [ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);
     
