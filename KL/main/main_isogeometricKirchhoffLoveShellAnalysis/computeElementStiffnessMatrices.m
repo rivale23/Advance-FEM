@@ -1,4 +1,4 @@
-function [ BSplinePatch ] = computeElementStiffnessMatrices( BSplinePatch )
+function [ BSplinePatch,TotalArea,minElArea] = computeElementStiffnessMatrices( BSplinePatch )
 %COMPUTEELEMENTSTIFFNESSMATRICES Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -13,6 +13,7 @@ CP = BSplinePatch.CP;
 isNURBS = BSplinePatch.isNURBS;
 parameters = BSplinePatch.parameters;
 int = BSplinePatch.int;
+TotalArea=0;
 
 % Number of knots in xi-,eta-direction
 mxi = length(Xi);
@@ -43,6 +44,13 @@ DOFNumbering = BSplinePatch.DOFNumbering;
 
 % Check input
 checkInputForBSplineSurface(p,mxi,nxi,q,meta,neta);
+% Initialize minimum element area in the IGA mesh
+tolerance = 1e-4;
+if abs(CP(1,1,1)-CP(nxi,1,1))>=tolerance
+    minElArea = abs(CP(1,1,1)-CP(nxi,1,1));
+else
+    minElArea = CP(1,1,1)-CP(1,neta,1);
+end
 
 % Local number of DOFs per element
 noDOFsEl = 3*(p+1)*(q+1);
@@ -103,14 +111,18 @@ for elj = q+1:meta-q-1
             end
         end                                 
         
-        %% 3ii. Compute local matrix and element area
+        %% 3ii. Compute local matrix, element area and total area of the shell
         [ K_local, elementArea ] = computeElementStiffnessMatrix(eli,p,Xi,elj,q,Eta,CP,isNURBS,xiNGP,xiGP,xiGW,etaNGP,etaGP,etaGW,Dm,Db);
-
+        TotalArea=TotalArea+elementArea;
         %% 3iii. save element to BSplinePatch
         element = struct(   'EFT',EFT,...
                             'K_local',K_local,...
                             'elementArea',elementArea);
-        BSplinePatch.elements{eli-p,elj-q} = element;       
+        BSplinePatch.elements{eli-p,elj-q} = element;  
+        %% 3iv. Find the minimum element area in the mesh
+        if elementArea<minElArea
+            minElArea = elementArea;
+        end 
     end
 end
 

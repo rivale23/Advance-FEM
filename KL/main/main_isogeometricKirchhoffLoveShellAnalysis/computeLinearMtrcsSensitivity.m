@@ -1,4 +1,4 @@
-function [KDist,EFTDist] = computeLinearMtrcsSensitivity(BSplinePatch,disturbed_cp)
+function [KDist,EFTDist,MassDist] = computeLinearMtrcsSensitivity(BSplinePatch,disturbed_cp)
 
 %% 0. Read input
 
@@ -12,6 +12,7 @@ isNURBS = BSplinePatch.isNURBS;
 parameters = BSplinePatch.parameters;
 int = BSplinePatch.int;
 DOFNumbering = BSplinePatch.DOFNumbering;
+MassDist=0;
 
 % Number of knots in xi-,eta-direction
 mxi = length(Xi);
@@ -102,6 +103,7 @@ for elj = q+1:meta-q-1
             elementAreaDist = element.elementArea;
             K_local = element.K_local;                
         end
+        MassDist=MassDist+elementAreaDist;
         KDist(EFT,EFT) = KDist(EFT,EFT) + K_local;
 
         %% 3iv. Find the minimum element area in the mesh

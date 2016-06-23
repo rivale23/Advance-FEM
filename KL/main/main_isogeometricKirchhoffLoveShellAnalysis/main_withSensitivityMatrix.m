@@ -224,15 +224,9 @@ end
 
 %% TODO HERE GOES THE WRAPPER!!!
 tic
-Smatrix = Sensitivity_wrapper( BSplinePatch, vectors ,true);
+[Smatrix,Smass] = Sensitivity_wrapper( BSplinePatch, vectors ,true);
 toc
+%shows sensitivity of strain energy function
 Smatrix
-
-
-%% Computes for some control points
-DispVectors{1}=[1 1 1];
-DispVectors{2}=[1 1 1];
-CPsToAnalize{1}=[1 1];
-CPsToAnalize{2}=[1 2];
-[Smatrix2] = SensitivityWrapper2( BSplinePatch, DispVectors, CPsToAnalize,true);
-Smatrix2
+%shows sensitivity of mass function
+Smass
