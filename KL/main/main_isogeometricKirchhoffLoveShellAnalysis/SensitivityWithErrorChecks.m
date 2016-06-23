@@ -1,5 +1,6 @@
 function [ Ep_final, delta_final, RelErr, Ep_history, delta_history ] = SensitivityWithErrorChecks( BSplinePatch,K,CP2Dist,vector,dHatLinear,RelErrTolerance,delta_in )
 %SENSITIVITYWITHERRORCHECKS Calculates the sensitivity for a given
+
 %disturbance in the control points of a BSplinePatch.
 
 switch nargin

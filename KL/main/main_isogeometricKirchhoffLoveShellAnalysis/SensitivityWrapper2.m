@@ -6,15 +6,15 @@ function [ SensitivityMatrix ] = SensitivityWrapper2( BSplinePatch, vectors, Des
 
 %if the flag is not given
 if nargin < 4
-    flag=0;
+    flag=false;
 end
 sv=size(vectors,2);
 RelErrTolerance = 10^(-5);
 %the falg will 
-if flag==1
+if flag==true
     SensitivityMatrix=zeros([sv,3]);  
 else
-    SensitivityMatrix=zeros(sv,1); 
+    SensitivityMatrix=zeros([sv,1]); 
 end
 solve_LinearSystem = @solve_LinearSystemMatlabBackslashSolver;
 BSplinePatch = computeElementStiffnessMatrices(BSplinePatch);
@@ -26,7 +26,7 @@ delta = -1; % initial finite difference delta equal to -1 allows iteration for t
 for i = 1:sv
     vector=vectors{i};
     CP2Dist=DesiredCPs{i};
-    if flag==1
+    if flag==true
         for d = 1:3
             vector_component = zeros(size(vector));
             vector_component(d) = vector(d);

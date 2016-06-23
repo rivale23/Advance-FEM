@@ -224,15 +224,15 @@ end
 
 %% TODO HERE GOES THE WRAPPER!!!
 tic
-%Smatrix = Sensitivity_wrapper( BSplinePatch, vectors );
+Smatrix = Sensitivity_wrapper( BSplinePatch, vectors ,true);
 toc
-%Smatrix
+Smatrix
 
 
 %% Computes for some control points
-DispVectors{1}=[0 0 1];
-DispVectors{2}=[0 0 1];
+DispVectors{1}=[1 1 1];
+DispVectors{2}=[1 1 1];
 CPsToAnalize{1}=[1 1];
 CPsToAnalize{2}=[1 2];
-[Smatrix2] = SensitivityWrapper2( BSplinePatch, DispVectors, CPsToAnalize);
+[Smatrix2] = SensitivityWrapper2( BSplinePatch, DispVectors, CPsToAnalize,true);
 Smatrix2
