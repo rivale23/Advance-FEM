@@ -5,10 +5,6 @@ function [ Ep_final, delta_final, RelErr, Ep_history, delta_history,MassFinal ] 
 %Cases are adjusted for counting as well the new parameters of total mass
 %and min element area
 
-if ~isfield(BSplinePatch,'t')
-    BSplinePatch.t = 0.25;
-end
-
 if nargin < 3
     error('not enough input arguments!');
 end
