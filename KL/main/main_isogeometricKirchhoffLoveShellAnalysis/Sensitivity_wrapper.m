@@ -6,7 +6,7 @@ function [ SensitivityMatrix,SensitivityMass ] = Sensitivity_wrapper( BSplinePat
 %it returns the sentitivities wrt to the strain energy and the mass
 %function for the requested control points and directions
 
-if nargin<3
+if nargin < 3
     IndependentDirectionsFlag=false;
 end
 
@@ -40,6 +40,7 @@ for i = 1:size(vectors,1)
                 if max(abs(vector_component)) == 0
                     disp(['sensitivity for component ',mat2str(d),' of CP @',mat2str([i,j]),' not computed, because disturbance equal to zero.']);
                     SensitivityMatrix(i,j,d)=0;
+                    SensitivityMass(i,j,d)=0;
                 else
                     disp(['calculating sensitivity for component ',mat2str(d),' of CP @ ',mat2str([i,j])]);  
                     %calculation of the sensitivity of the strain energy
