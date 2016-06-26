@@ -3,6 +3,10 @@ function [KDist, EFTDist, MassDist] = computeLinearMtrcsSensitivity(BSplinePatch
 
 %% 0. Read input
 
+if ~isfield(BSplinePatch,'elements') % element stiffness matrices have not been precomputed.
+    BSplinePatch = computeElementStiffnessMatrices(BSplinePatch);
+end
+
 % Assign back the patch properties
 p = BSplinePatch.p;
 q = BSplinePatch.q;
@@ -84,8 +88,8 @@ end
 
 for elj = q+1:meta-q-1
     for eli = p+1:mxi-p-1                
-        %% 3i. Read precomputed quantities
-        element = BSplinePatch.elements{eli-p,elj-q};            
+        %% 3i. Read precomputed quantities        
+        element = BSplinePatch.elements{eli-p,elj-q};                                
         % Read element freedom table
         EFT = element.EFT;                                       
         
