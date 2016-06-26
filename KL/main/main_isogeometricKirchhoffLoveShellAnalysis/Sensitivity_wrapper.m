@@ -1,4 +1,4 @@
-function [ SensitivityMatrix,SensitivityMass ] = Sensitivity_wrapper( BSplinePatch, vectors, IndependentDirectionsFlag, parameters)
+function [ SensitivityMatrix,SensitivityMass ] = Sensitivity_wrapper( BSplinePatch, vectors, IndependentDirectionsFlag)
 %SENSITIVITY_WRAPPER Summary of this function goes here
 %if IndependentDirectionsFlag is send as true, then it will compute the
 %sensitivity indepenedent for each directions (X,Y,Z), if the argument is false or
@@ -8,12 +8,6 @@ function [ SensitivityMatrix,SensitivityMass ] = Sensitivity_wrapper( BSplinePat
 
 
 %% check input and add default values if input is missing
-
-if nargin < 4
-    BSplinePatch.t = 0.25; 
-else
-    BSplinePatch.t = parameters.t;
-end
 
 if nargin < 3
     IndependentDirectionsFlag=false;

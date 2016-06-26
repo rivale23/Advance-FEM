@@ -12,6 +12,7 @@ Eta = BSplinePatch.Eta;
 CP = BSplinePatch.CP;
 isNURBS = BSplinePatch.isNURBS;
 int = BSplinePatch.int;
+parameters = BSplinePatch.parameters;
 
 % Neuman boundary conditions
 NBC = BSplinePatch.NBC;
@@ -53,7 +54,7 @@ end
 
 %% 2. Compute the exernally applied load vector
 F_global = zeros(noDOFs,1);
-t = BSplinePatch.t;    
+t = parameters.t;    
 for counterNBC = 1:NBC.noCnd
     funcHandle = str2func(NBC.computeLoadVct{counterNBC});
     F_global = funcHandle(F_global,NBC.xiLoadExtension{counterNBC},...

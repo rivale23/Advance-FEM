@@ -131,7 +131,7 @@ end
 % save all global quantities to the patch.
 BSplinePatch.minElArea = minElArea;
 BSplinePatch.TotalArea = TotalArea;
-BSplinePatch.TotalMass = TotalArea * BSplinePatch.t;
+BSplinePatch.TotalMass = TotalArea * parameters.t;
 
 end
 
