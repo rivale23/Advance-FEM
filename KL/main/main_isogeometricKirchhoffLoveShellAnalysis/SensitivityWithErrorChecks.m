@@ -1,19 +1,37 @@
-function [ Ep_final, delta_final, RelErr, Ep_history, delta_history,MassFinal ] = SensitivityWithErrorChecks( BSplinePatch,K,CP2Dist,vector,dHatLinear,RelErrTolerance,delta_in )
+function [ Ep_final, delta_final, RelErr, Ep_history, delta_history,MassFinal ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,RelErrTolerance,delta_in )
 %SENSITIVITYWITHERRORCHECKS Calculates the sensitivity for a given
 
 %disturbance in the control points of a BSplinePatch.
 %Cases are adjusted for counting as well the new parameters of total mass
 %and min element area
-switch nargin
-    case 5
-        RelErrTolerance = 10^-5;
-        delta_in = -1; 
-    case 6 
-        delta_in = -1; 
-    case 7
-        %do nothing
-    otherwise
-        error('not enough input arguments!');
+
+if ~isfield(BSplinePatch,'t')
+    BSplinePatch.t = 0.25;
+end
+
+if nargin < 3
+    error('not enough input arguments!');
+end
+
+if nargin == 4
+    error('please provide K_global and u_global.');
+end
+
+if nargin < 5
+    solve_LinearSystem = @solve_LinearSystemMatlabBackslashSolver;
+    %Precompute the element stiffness matrix of the unperturbed model and save
+    %them to the BSplinePatch
+    [BSplinePatch] = computeElementStiffnessMatrices(BSplinePatch);
+    [K_global, F_global] = assembleGlobalSystem(BSplinePatch);
+    u_global = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
+end
+
+if nargin < 6    
+    RelErrTolerance = 10^-5;
+end
+
+if nargin < 7
+   delta_in = -1; 
 end
         
 %% Solve the system applying linear analysis
@@ -42,7 +60,7 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
     
     [KDist, dindex,MassDist] = computeLinearMtrcsSensitivity(BSplinePatch,CP2Dist);        
     
-    [ Ep ] = Sensitivity(K,KDist,delta,dHatLinear,dindex);
+    [ Ep ] = Sensitivity(K_global,KDist,delta,u_global,dindex);
      
     Ep_history(iteration_count)=Ep;
     delta_history(iteration_count)=delta;

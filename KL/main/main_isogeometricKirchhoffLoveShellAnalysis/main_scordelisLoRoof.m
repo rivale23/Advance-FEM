@@ -246,14 +246,7 @@ graph.index = graph.index + 1;
 
 RelErrTolerance = 10^(-5);
 
-%Computes the element stiffness matrix of the unperturbed model, returns
-%the BSplinePatch, the total mass in the initial state and the minimum
-%element area
-BSplinePatch.t = parameters.t;
-[BSplinePatch] = computeElementStiffnessMatrices(BSplinePatch);
-[K_global, F_global] = assembleGlobalSystem(BSplinePatch);
-dHatLinear = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
-[Ep_final, delta_final, RelErr, Ep_history, delta_history, Mass_final] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector,dHatLinear);
+[Ep_final, delta_final, RelErr, Ep_history, delta_history, Mass_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector);
 
 figure(9)
 hold on
@@ -263,5 +256,5 @@ ylabel('Sensitivity');
 hold off
 
 %% Postprocessing
-graph.index = plot_postprocIGAKirchhoffLoveShellLinear(BSplinePatch,dHatLinear,graph,'outputEnabled');
+%graph.index = plot_postprocIGAKirchhoffLoveShellLinear(BSplinePatch,dHatLinear,graph,'outputEnabled');
 title('Linear analysis');
