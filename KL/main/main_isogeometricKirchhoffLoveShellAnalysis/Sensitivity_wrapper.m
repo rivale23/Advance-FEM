@@ -6,6 +6,9 @@ function [ SensitivityMatrix,SensitivityMass ] = Sensitivity_wrapper( BSplinePat
 %it returns the sentitivities wrt to the strain energy and the mass
 %function for the requested control points and directions
 
+
+%% check input and add default values if input is missing
+
 if nargin < 4
     BSplinePatch.t = 0.25; 
 else
@@ -23,23 +26,26 @@ else
     SensitivityMatrix = zeros([size(vectors),1]);
     SensitivityMass = zeros([size(vectors),1]);
 end
+
+%% precompute static variables like displacement and stiffness matrices
+
 RelErrTolerance = 10^(-5);
 
 solve_LinearSystem = @solve_LinearSystemMatlabBackslashSolver;
-%Computes the element stiffness matrix of the unperturbed model, returns
-%the BSplinePatch, the total mass in the initial state and the minimum
-%element area
+%Precompute the element stiffness matrix of the unperturbed model and save
+%them to the BSplinePatch
 [BSplinePatch] = computeElementStiffnessMatrices(BSplinePatch);
 [K_global, F_global] = assembleGlobalSystem(BSplinePatch);
-dHatLinear = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
+u_global = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
 
 delta = -1; % initial finite difference delta equal to -1 allows iteration for the first CP, other control points use this delta to save computation time
 
+%% iterate over all displacement directions and compute sensitivities
 for i = 1:size(vectors,1)
     for j = 1:size(vectors,2)        
         vector=vectors{i,j};%direction of the distortion
         CP2Dist=[i j];%control point to disturb
-        if IndependentDirectionsFlag==true
+        if IndependentDirectionsFlag==true % compute all sensitivities for each vector component independently
             for d = 1:3
                 vector_component = zeros(size(vector));
                 vector_component(d) = vector(d);
@@ -56,7 +62,7 @@ for i = 1:size(vectors,1)
                     %requested control point, for efficiency reasons. It
                     %also returns the sensitivity of mass of the model due
                     %to the perturbation
-                    [Ep_final, delta, ~, ~, ~,Mass_final] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector_component,dHatLinear,RelErrTolerance,delta);                
+                    [Ep_final, delta, ~, ~, ~, Mass_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector_component,K_global,u_global,RelErrTolerance,delta);                
                     SensitivityMatrix(i,j,d) = Ep_final; % save sensitivity to matrix
                     %The mass is currently calculated assuming a constant density of
                     %1.0 and constant thickness. Here the thickness is
@@ -68,11 +74,17 @@ for i = 1:size(vectors,1)
                     SensitivityMass(i,j,d) = Mass_final;%save sensitivity mass
                 end
             end
-        else
-            disp(['calculating sensitivity of CP @ ',mat2str([i,j])]);
-            [Ep_final, delta, ~, ~, ~,Mass_final] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector,dHatLinear,RelErrTolerance,TotalIniMass,minElArea,delta);                
-            SensitivityMatrix(i,j) = Ep_final; % save sensitivity to matrix
-            SensitivityMass(i,j) = Mass_final;%save sensitivity mass
+        else % only compute sensitivity for each vector one with all three components combined
+            if max(abs(vector)) == 0
+                disp(['sensitivity for CP @',mat2str([i,j]),' not computed, because disturbance equal to zero.']);
+                SensitivityMatrix(i,j)=0;
+                SensitivityMass(i,j)=0;
+            else
+                disp(['calculating sensitivity of CP @ ',mat2str([i,j])]);
+                [Ep_final, delta, ~, ~, ~, Mass_final] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector,u_global,RelErrTolerance,TotalIniMass,minElArea,delta);                
+                SensitivityMatrix(i,j) = Ep_final; % save sensitivity to matrix
+                SensitivityMass(i,j) = Mass_final;%save sensitivity mass
+            end
         end
     end
 end
