@@ -53,7 +53,7 @@ end
 
 %% 2. Compute the exernally applied load vector
 F_global = zeros(noDOFs,1);
-t = 0;    
+t = BSplinePatch.t;    
 for counterNBC = 1:NBC.noCnd
     funcHandle = str2func(NBC.computeLoadVct{counterNBC});
     F_global = funcHandle(F_global,NBC.xiLoadExtension{counterNBC},...

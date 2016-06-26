@@ -216,7 +216,7 @@ BSplinePatch = fillUpPatch...
 
 
 %% Advance FEM: here The control points can be modified to change the shape here.
-magnitude=0
+magnitude=0;
 vector=[1,0,0];%direction of the distortion
 CP2Dist=[5 1];%control pint to disturb
 [BSplinePatch]=CPDisturbance(BSplinePatch,CP2Dist,vector,magnitude,0);
@@ -246,7 +246,14 @@ graph.index = graph.index + 1;
 
 RelErrTolerance = 10^(-5);
 
-[Ep_final, RelErr, Ep_history, delta_history, dHatLinear] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,solve_LinearSystem,RelErrTolerance );
+%Computes the element stiffness matrix of the unperturbed model, returns
+%the BSplinePatch, the total mass in the initial state and the minimum
+%element area
+BSplinePatch.t = parameters.t;
+[BSplinePatch] = computeElementStiffnessMatrices(BSplinePatch);
+[K_global, F_global] = assembleGlobalSystem(BSplinePatch);
+dHatLinear = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
+[Ep_final, delta_final, RelErr, Ep_history, delta_history, Mass_final] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector,dHatLinear);
 
 figure(9)
 hold on

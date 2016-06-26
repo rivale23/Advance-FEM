@@ -1,27 +1,28 @@
-function [ Ep_final, delta_final, RelErr, Ep_history, delta_history,MassFinal ] = SensitivityWithErrorChecks( BSplinePatch,K,CP2Dist,vector,dHatLinear,RelErrTolerance,TotalIniMass,minElArea,delta_in )
+function [ Ep_final, delta_final, RelErr, Ep_history, delta_history,MassFinal ] = SensitivityWithErrorChecks( BSplinePatch,K,CP2Dist,vector,dHatLinear,RelErrTolerance,delta_in )
 %SENSITIVITYWITHERRORCHECKS Calculates the sensitivity for a given
 
 %disturbance in the control points of a BSplinePatch.
 %Cases are adjusted for counting as well the new parameters of total mass
 %and min element area
 switch nargin
-
-    case 8 
-        delta_in = -1;
- 
-    case 9
+    case 5
+        RelErrTolerance = 10^-5;
+        delta_in = -1; 
+    case 6 
+        delta_in = -1; 
+    case 7
+        %do nothing
     otherwise
         error('not enough input arguments!');
 end
         
-
-%% %Advance FEM:  Solve the system applying linear analysis
+%% Solve the system applying linear analysis
 
 RelErr = inf; % initial relative error
 EpOld = inf; % initial EpOld
 MassDist=0; % mass of the disturbed model
 if delta_in < 0 % use default delta and find optimal delta iteratively
-    delta = sqrt(minElArea); % initial delta for finite differences (scaled to min element size
+    delta = sqrt(BSplinePatch.minElArea); % initial delta for finite differences (scaled to min element size)
     do_not_iterate = 0; % iterate until error bounds are met
 else % use given delta
     delta = delta_in; % use input delta
@@ -58,7 +59,7 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
 end
 
 Ep_final = Ep_history(end);
-MassFinal=(MassDist-TotalIniMass)/delta;%calculates the sensitivity directly
+MassFinal= (MassDist-BSplinePatch.TotalMass) / delta;%calculates the sensitivity directly
 delta_final = delta_history(end);
 
 end

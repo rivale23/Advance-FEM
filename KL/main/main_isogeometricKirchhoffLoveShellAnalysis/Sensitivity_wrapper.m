@@ -1,10 +1,16 @@
-function [ SensitivityMatrix,SensitivityMass ] = Sensitivity_wrapper( BSplinePatch, vectors, IndependentDirectionsFlag )
+function [ SensitivityMatrix,SensitivityMass ] = Sensitivity_wrapper( BSplinePatch, vectors, IndependentDirectionsFlag, parameters)
 %SENSITIVITY_WRAPPER Summary of this function goes here
 %if IndependentDirectionsFlag is send as true, then it will compute the
 %sensitivity indepenedent for each directions (X,Y,Z), if the argument is false or
 %is not given, it will compute only one sensitivity (direction of the vector)
 %it returns the sentitivities wrt to the strain energy and the mass
 %function for the requested control points and directions
+
+if nargin < 4
+    BSplinePatch.t = 0.25; 
+else
+    BSplinePatch.t = parameters.t;
+end
 
 if nargin < 3
     IndependentDirectionsFlag=false;
@@ -23,7 +29,7 @@ solve_LinearSystem = @solve_LinearSystemMatlabBackslashSolver;
 %Computes the element stiffness matrix of the unperturbed model, returns
 %the BSplinePatch, the total mass in the initial state and the minimum
 %element area
-[BSplinePatch,TotalIniMass,minElArea] = computeElementStiffnessMatrices(BSplinePatch);
+[BSplinePatch] = computeElementStiffnessMatrices(BSplinePatch);
 [K_global, F_global] = assembleGlobalSystem(BSplinePatch);
 dHatLinear = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
 
@@ -50,7 +56,7 @@ for i = 1:size(vectors,1)
                     %requested control point, for efficiency reasons. It
                     %also returns the sensitivity of mass of the model due
                     %to the perturbation
-                    [Ep_final, delta, ~, ~, ~,Massfinal] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector_component,dHatLinear,RelErrTolerance,TotalIniMass,minElArea,delta);                
+                    [Ep_final, delta, ~, ~, ~,Mass_final] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector_component,dHatLinear,RelErrTolerance,delta);                
                     SensitivityMatrix(i,j,d) = Ep_final; % save sensitivity to matrix
                     %The mass is currently calculated assuming a constant density of
                     %1.0 and constant thickness. Here the thickness is
@@ -59,14 +65,14 @@ for i = 1:size(vectors,1)
                     %= 1.0*thickness*(final_area-initial_area)delta , then 
                     %it results the same to multiply the thickness to the sensitivity 
                     %than to the perturbed and unperturbed shells
-                    SensitivityMass(i,j,d)=Massfinal*BSplinePatch.parameters.t;%save sensitivity mass
+                    SensitivityMass(i,j,d) = Mass_final;%save sensitivity mass
                 end
             end
         else
             disp(['calculating sensitivity of CP @ ',mat2str([i,j])]);
-            [Ep_final, delta, ~, ~, ~,Massfinal] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector,dHatLinear,RelErrTolerance,TotalIniMass,minElArea,delta);                
+            [Ep_final, delta, ~, ~, ~,Mass_final] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector,dHatLinear,RelErrTolerance,TotalIniMass,minElArea,delta);                
             SensitivityMatrix(i,j) = Ep_final; % save sensitivity to matrix
-            SensitivityMass(i,j)=Massfinal*BSplinePatch.parameters.t;%save sensitivity mass
+            SensitivityMass(i,j) = Mass_final;%save sensitivity mass
         end
     end
 end

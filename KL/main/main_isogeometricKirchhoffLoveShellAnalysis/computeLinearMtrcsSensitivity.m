@@ -1,4 +1,5 @@
-function [KDist,EFTDist,MassDist] = computeLinearMtrcsSensitivity(BSplinePatch,disturbed_cp)
+function [KDist, EFTDist, MassDist] = computeLinearMtrcsSensitivity(BSplinePatch,disturbed_cp)
+
 
 %% 0. Read input
 
@@ -112,5 +113,7 @@ for elj = q+1:meta-q-1
         end        
     end
 end
+
+MassDist = MassDist * BSplinePatch.parameters.t;
 
 end

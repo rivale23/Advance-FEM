@@ -1,4 +1,4 @@
-function [ BSplinePatch,TotalArea,minElArea] = computeElementStiffnessMatrices( BSplinePatch )
+function [ BSplinePatch] = computeElementStiffnessMatrices( BSplinePatch )
 %COMPUTEELEMENTSTIFFNESSMATRICES Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -114,17 +114,24 @@ for elj = q+1:meta-q-1
         %% 3ii. Compute local matrix, element area and total area of the shell
         [ K_local, elementArea ] = computeElementStiffnessMatrix(eli,p,Xi,elj,q,Eta,CP,isNURBS,xiNGP,xiGP,xiGW,etaNGP,etaGP,etaGW,Dm,Db);
         TotalArea=TotalArea+elementArea;
+
         %% 3iii. save element to BSplinePatch
         element = struct(   'EFT',EFT,...
                             'K_local',K_local,...
                             'elementArea',elementArea);
         BSplinePatch.elements{eli-p,elj-q} = element;  
+        
         %% 3iv. Find the minimum element area in the mesh
         if elementArea<minElArea
             minElArea = elementArea;
         end 
     end
 end
+
+% save all global quantities to the patch.
+BSplinePatch.minElArea = minElArea;
+BSplinePatch.TotalArea = TotalArea;
+BSplinePatch.TotalMass = TotalArea * BSplinePatch.t;
 
 end
 
