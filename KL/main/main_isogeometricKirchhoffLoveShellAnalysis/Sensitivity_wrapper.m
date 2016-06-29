@@ -75,7 +75,7 @@ for i = 1:size(vectors,1)
                 SensitivityMass(i,j)=0;
             else
                 disp(['calculating sensitivity of CP @ ',mat2str([i,j])]);
-                [Ep_final, delta, ~, ~, ~, Mass_final] = SensitivityWithErrorChecks( BSplinePatch,K_global,CP2Dist,vector,u_global,RelErrTolerance,TotalIniMass,minElArea,delta);                
+                [Ep_final, delta, ~, ~, ~, Mass_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,RelErrTolerance,delta);                
                 SensitivityMatrix(i,j) = Ep_final; % save sensitivity to matrix
                 SensitivityMass(i,j) = Mass_final;%save sensitivity mass
             end

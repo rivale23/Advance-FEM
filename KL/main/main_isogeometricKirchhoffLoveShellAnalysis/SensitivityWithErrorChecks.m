@@ -57,6 +57,7 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
     [KDist, dindex,MassDist] = computeLinearMtrcsSensitivity(BSplinePatch,CP2Dist);        
     
     [ Ep ] = Sensitivity(K_global,KDist,delta,u_global,dindex);
+    [EpDisp]=DisplacementSensitivity(K_global,KDist,delta,u_global,dindex);
      
     Ep_history(iteration_count)=Ep;
     delta_history(iteration_count)=delta;

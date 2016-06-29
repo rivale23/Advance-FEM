@@ -13,6 +13,7 @@ function [ Es ] = DisplacementSensitivity( Ko,Kdelta,delta,U, Kindex)
     Ured=U(Kindex);
     Kp=(KD-K)./delta;
     V=Kindex;
-    Es=((-inv(K)*Kp*Ured)'*V)./2;
+    Es=(-inv(K)*Kp*Ured)';
+    Es=Es*V'./2;
     
 end 
