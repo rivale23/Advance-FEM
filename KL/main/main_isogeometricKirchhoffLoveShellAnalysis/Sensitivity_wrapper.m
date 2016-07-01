@@ -1,4 +1,4 @@
-function [ SensitivityMatrix,SensitivityMass ] = Sensitivity_wrapper( BSplinePatch, vectors, IndependentDirectionsFlag)
+function [ SensitivityMatrix,SensitivityMass,SensitivityDisplacement ] = Sensitivity_wrapper( BSplinePatch, vectors, IndependentDirectionsFlag)
 %SENSITIVITY_WRAPPER Summary of this function goes here
 %if IndependentDirectionsFlag is send as true, then it will compute the
 %sensitivity indepenedent for each directions (X,Y,Z), if the argument is false or
@@ -16,9 +16,11 @@ end
 if IndependentDirectionsFlag==true
    SensitivityMatrix = zeros([size(vectors),3]);
    SensitivityMass = zeros([size(vectors),3]);
+   SensitivityDisplacement = zeros([size(vectors),3]);
 else
     SensitivityMatrix = zeros([size(vectors),1]);
     SensitivityMass = zeros([size(vectors),1]);
+    SensitivityDisplacement = zeros([size(vectors),1]);
 end
 
 %% precompute static variables like displacement and stiffness matrices
@@ -56,7 +58,7 @@ for i = 1:size(vectors,1)
                     %requested control point, for efficiency reasons. It
                     %also returns the sensitivity of mass of the model due
                     %to the perturbation
-                    [Ep_final, delta, ~, ~, ~, Mass_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector_component,K_global,u_global,RelErrTolerance,delta);                
+                    [Ep_final, delta, ~, ~, ~, Mass_final, Disp_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector_component,K_global,u_global,RelErrTolerance,delta);                
                     SensitivityMatrix(i,j,d) = Ep_final; % save sensitivity to matrix
                     %The mass is currently calculated assuming a constant density of
                     %1.0 and constant thickness. Here the thickness is
@@ -66,6 +68,7 @@ for i = 1:size(vectors,1)
                     %it results the same to multiply the thickness to the sensitivity 
                     %than to the perturbed and unperturbed shells
                     SensitivityMass(i,j,d) = Mass_final;%save sensitivity mass
+                    SensitivityDisplacement(i,j,d)=Disp_final;%save sensitivity displacement
                 end
             end
         else % only compute sensitivity for each vector one with all three components combined
@@ -73,11 +76,13 @@ for i = 1:size(vectors,1)
                 disp(['sensitivity for CP @',mat2str([i,j]),' not computed, because disturbance equal to zero.']);
                 SensitivityMatrix(i,j)=0;
                 SensitivityMass(i,j)=0;
+                SensitivityDisplacement(i,j)=0;
             else
                 disp(['calculating sensitivity of CP @ ',mat2str([i,j])]);
-                [Ep_final, delta, ~, ~, ~, Mass_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,RelErrTolerance,delta);                
+                [Ep_final, delta, ~, ~, ~, Mass_final, Disp_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,RelErrTolerance,delta);                
                 SensitivityMatrix(i,j) = Ep_final; % save sensitivity to matrix
                 SensitivityMass(i,j) = Mass_final;%save sensitivity mass
+                SensitivityDisplacement(i,j)=Disp_final;%save sensitivity displacement
             end
         end
     end

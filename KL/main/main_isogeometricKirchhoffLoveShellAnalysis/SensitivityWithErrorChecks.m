@@ -1,4 +1,4 @@
-function [ Ep_final, delta_final, RelErr, Ep_history, delta_history,MassFinal ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,RelErrTolerance,delta_in )
+function [ Ep_final, delta_final, RelErr, Ep_history, delta_history,MassFinal,DispFinal ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,RelErrTolerance,delta_in )
 %SENSITIVITYWITHERRORCHECKS Calculates the sensitivity for a given
 
 %disturbance in the control points of a BSplinePatch.
@@ -57,7 +57,7 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
     [KDist, dindex,MassDist] = computeLinearMtrcsSensitivity(BSplinePatch,CP2Dist);        
     
     [ Ep ] = Sensitivity(K_global,KDist,delta,u_global,dindex);
-    [EpDisp]=DisplacementSensitivity(K_global,KDist,delta,u_global,dindex);
+    [EpDisp] = DisplacementSensitivity(K_global,KDist,delta,u_global,dindex);
      
     Ep_history(iteration_count)=Ep;
     delta_history(iteration_count)=delta;
@@ -74,6 +74,7 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
 end
 
 Ep_final = Ep_history(end);
+DispFinal = EpDisp;
 MassFinal= (MassDist-BSplinePatch.TotalMass) / delta;%calculates the sensitivity directly
 delta_final = delta_history(end);
 
