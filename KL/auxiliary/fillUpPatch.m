@@ -268,6 +268,7 @@ BSplinePatch.int = int;
 BSplinePatch.xicoup = xicoup;
 BSplinePatch.etacoup = etacoup;
 
+
 % Issue warnings for analyses which have not yet been optimized
 if strcmp(analysis.type,'isogeometricKirchhoffLoveShellAnalysis') || ...
         strcmp(analysis.type,'isogeometricPlateInMembraneActionAnalysis')

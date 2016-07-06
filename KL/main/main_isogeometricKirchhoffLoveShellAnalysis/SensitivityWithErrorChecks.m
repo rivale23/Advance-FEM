@@ -1,6 +1,8 @@
-function [ Ep_final, delta_final, RelErr, Ep_history, delta_history,MassFinal,DispFinal ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,RelErrTolerance,delta_in )
+function [ Ep_final, delta_final, RelErr, Ep_history, delta_history,MassFinal,DispFinal ] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,Compute,RelErrTolerance,delta_in )
 %SENSITIVITYWITHERRORCHECKS Calculates the sensitivity for a given
-
+MassFinal=0;
+Ep_final=0;
+DispFinal=0;
 %disturbance in the control points of a BSplinePatch.
 %Cases are adjusted for counting as well the new parameters of total mass
 %and min element area
@@ -22,14 +24,33 @@ if nargin < 5
     u_global = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
 end
 
-if nargin < 6    
+if nargin < 7    
     RelErrTolerance = 10^-5;
 end
 
-if nargin < 7
+if nargin < 8
    delta_in = -1; 
 end
         
+%% checks which sensitivity will be computed
+
+disp_flag=false;
+en_flag=false;
+mass_flag=false;
+if strcmp(Compute,'displacement')
+    disp_flag=true;
+    mass_flag=true;
+elseif strcmp(Compute,'energy')
+    en_flag=true;
+    mass_flag=true;
+elseif strcmp(Compute,'mass')
+    mass_flag=true;
+elseif strcmp(Compute,'all')
+    disp_flag=true;
+    en_flag=true;
+    mass_flag=true;
+end        
+    
 %% Solve the system applying linear analysis
 
 RelErr = inf; % initial relative error
@@ -56,13 +77,22 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
     
     [KDist, dindex,MassDist] = computeLinearMtrcsSensitivity(BSplinePatch,CP2Dist);        
     
-    [ Ep ] = Sensitivity(K_global,KDist,delta,u_global,dindex);
-    [EpDisp] = DisplacementSensitivity(K_global,KDist,delta,u_global,dindex);
-     
-    Ep_history(iteration_count)=Ep;
+    if en_flag==true
+        [ Ep ] = Sensitivity(K_global,KDist,delta,u_global,dindex); 
+        Ep_history(iteration_count)=Ep;
+    end
+    if disp_flag==true
+        [EpDisp] = DisplacementSensitivity(K_global,KDist,delta,u_global,dindex,BSplinePatch);
+    end
+
     delta_history(iteration_count)=delta;
-    RelErr = abs((Ep - EpOld)/Ep);
-    EpOld = Ep;
+    if en_flag==true
+        RelErr = abs((Ep - EpOld)/Ep);
+        EpOld = Ep;
+    else
+        RelErr = abs((EpDisp - EpOld)/EpDisp);
+        EpOld = EpDisp;
+    end
     delta=delta/2;%this is the increment used to calculate the new CP, value that converged for several tests
     if (delta < 10^6*eps) % output error message if delta goes too low, below machine prescision!
         warning(['sensitivity analysis has not converged up to the given relative error tolerance of ',mat2str(RelErrTolerance),'!\n current error: ',mat2str(RelErr)]);
@@ -72,10 +102,15 @@ while (RelErr > RelErrTolerance) % check if error meets the demands of the user 
         break;
     end
 end
-
-Ep_final = Ep_history(end);
-DispFinal = EpDisp;
-MassFinal= (MassDist-BSplinePatch.TotalMass) / delta;%calculates the sensitivity directly
+if en_flag
+    Ep_final = Ep_history(end);
+end
+if disp_flag
+    DispFinal = EpDisp;
+end
+if mass_flag==true
+    MassFinal= (MassDist-BSplinePatch.TotalMass) / delta;%calculates the sensitivity directly
+end
 delta_final = delta_history(end);
 
 end

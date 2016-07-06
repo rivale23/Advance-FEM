@@ -1,4 +1,4 @@
-function [ SensitivityMatrix,SensitivityMass,SensitivityDisplacement ] = Sensitivity_wrapper( BSplinePatch, vectors, IndependentDirectionsFlag)
+function [ SensitivityMatrix,SensitivityMass,SensitivityDisplacement,BSplinePatch ] = Sensitivity_wrapper( BSplinePatch, vectors,Compute , IndependentDirectionsFlag)
 %SENSITIVITY_WRAPPER Summary of this function goes here
 %if IndependentDirectionsFlag is send as true, then it will compute the
 %sensitivity indepenedent for each directions (X,Y,Z), if the argument is false or
@@ -9,7 +9,7 @@ function [ SensitivityMatrix,SensitivityMass,SensitivityDisplacement ] = Sensiti
 
 %% check input and add default values if input is missing
 
-if nargin < 3
+if nargin < 4
     IndependentDirectionsFlag=false;
 end
 
@@ -24,18 +24,26 @@ else
 end
 
 %% precompute static variables like displacement and stiffness matrices
-
 RelErrTolerance = 10^(-5);
+if BSplinePatch.PreFlag
+    K_global=BSplinePatch.KGlobal;    
+    u_global=BSplinePatch.UGlobal;
+    delta = BSplinePatch.delta; % initial finite difference delta equal to -1 allows iteration for the first CP, other control points use this delta to save computation time
+else
+    solve_LinearSystem = @solve_LinearSystemMatlabBackslashSolver;
+    %Precompute the element stiffness matrix of the unperturbed model and save
+    %them to the BSplinePatch
+    [BSplinePatch] = computeElementStiffnessMatrices(BSplinePatch);
+    [K_global, F_global] = assembleGlobalSystem(BSplinePatch);
+    u_global = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
+    %saves the K, u and F in the structure
+    BSplinePatch.KGlobal=K_global;
+    BSplinePatch.UGlobal=u_global;
+    % flag to indicate if the system has already being solved
+    BSplinePatch.PreFlag=true;
 
-solve_LinearSystem = @solve_LinearSystemMatlabBackslashSolver;
-%Precompute the element stiffness matrix of the unperturbed model and save
-%them to the BSplinePatch
-[BSplinePatch] = computeElementStiffnessMatrices(BSplinePatch);
-[K_global, F_global] = assembleGlobalSystem(BSplinePatch);
-u_global = solveGlobalSystem(K_global, F_global, BSplinePatch, solve_LinearSystem);
-
-delta = -1; % initial finite difference delta equal to -1 allows iteration for the first CP, other control points use this delta to save computation time
-
+    delta = -1; % initial finite difference delta equal to -1 allows iteration for the first CP, other control points use this delta to save computation time
+end
 %% iterate over all displacement directions and compute sensitivities
 for i = 1:size(vectors,1)
     for j = 1:size(vectors,2)        
@@ -46,11 +54,11 @@ for i = 1:size(vectors,1)
                 vector_component = zeros(size(vector));
                 vector_component(d) = vector(d);
                 if max(abs(vector_component)) == 0
-                    disp(['sensitivity for component ',mat2str(d),' of CP @',mat2str([i,j]),' not computed, because disturbance equal to zero.']);
+   %                 disp(['sensitivity for component ',mat2str(d),' of CP @',mat2str([i,j]),' not computed, because disturbance equal to zero.']);
                     SensitivityMatrix(i,j,d)=0;
                     SensitivityMass(i,j,d)=0;
                 else
-                    disp(['calculating sensitivity for component ',mat2str(d),' of CP @ ',mat2str([i,j])]);  
+  %                  disp(['calculating sensitivity for component ',mat2str(d),' of CP @ ',mat2str([i,j])]);  
                     %calculation of the sensitivity of the strain energy
                     %and mass. The minimum size area is passed for the
                     %initial guess of the default convergence analysis of
@@ -58,7 +66,7 @@ for i = 1:size(vectors,1)
                     %requested control point, for efficiency reasons. It
                     %also returns the sensitivity of mass of the model due
                     %to the perturbation
-                    [Ep_final, delta, ~, ~, ~, Mass_final, Disp_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector_component,K_global,u_global,RelErrTolerance,delta);                
+                    [Ep_final, delta, a, b, c, Mass_final, Disp_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector_component,K_global,u_global,Compute,RelErrTolerance,delta);                
                     SensitivityMatrix(i,j,d) = Ep_final; % save sensitivity to matrix
                     %The mass is currently calculated assuming a constant density of
                     %1.0 and constant thickness. Here the thickness is
@@ -73,13 +81,13 @@ for i = 1:size(vectors,1)
             end
         else % only compute sensitivity for each vector one with all three components combined
             if max(abs(vector)) == 0
-                disp(['sensitivity for CP @',mat2str([i,j]),' not computed, because disturbance equal to zero.']);
+ %               disp(['sensitivity for CP @',mat2str([i,j]),' not computed, because disturbance equal to zero.']);
                 SensitivityMatrix(i,j)=0;
                 SensitivityMass(i,j)=0;
                 SensitivityDisplacement(i,j)=0;
             else
-                disp(['calculating sensitivity of CP @ ',mat2str([i,j])]);
-                [Ep_final, delta, ~, ~, ~, Mass_final, Disp_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,RelErrTolerance,delta);                
+%                disp(['calculating sensitivity of CP @ ',mat2str([i,j])]);
+                [Ep_final, delta, a, b, c, Mass_final, Disp_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,Compute,RelErrTolerance,delta);                
                 SensitivityMatrix(i,j) = Ep_final; % save sensitivity to matrix
                 SensitivityMass(i,j) = Mass_final;%save sensitivity mass
                 SensitivityDisplacement(i,j)=Disp_final;%save sensitivity displacement
@@ -87,6 +95,7 @@ for i = 1:size(vectors,1)
         end
     end
 end
+BSplinePatch.delta=delta;
 
 end
 

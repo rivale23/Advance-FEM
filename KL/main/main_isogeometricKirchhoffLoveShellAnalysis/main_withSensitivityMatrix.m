@@ -223,9 +223,19 @@ for i = 1:size(BSplinePatch.CP,1)
 end
 
 %% TODO HERE GOES THE WRAPPER!!!
+BSplinePatch.PreFlag=false;
 tic
-[Smatrix,Smass,Sdisp] = Sensitivity_wrapper( BSplinePatch, vectors, true);
+[Smatrix,Smass,Sdisp,BSplinePatch]=GetAllSensitivities( BSplinePatch, vectors);
 toc
+tic
+[Smatrix,Smass,BSplinePatch]=GetEnergySensitivity( BSplinePatch, vectors);
+toc
+
+tic
+[Sdisp,Smass,BSplinePatch]=GetDisplacementSensitivity( BSplinePatch, vectors);
+toc
+
+
 %shows sensitivity of strain energy function
 Smatrix
 %shows sensitivity of mass function
