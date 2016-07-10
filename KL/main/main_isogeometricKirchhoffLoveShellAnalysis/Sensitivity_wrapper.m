@@ -1,6 +1,6 @@
 function [ SensitivityMatrix,SensitivityMass,SensitivityDisplacement,BSplinePatch ] = Sensitivity_wrapper( BSplinePatch, vectors,Compute , IndependentDirectionsFlag)
 %SENSITIVITY_WRAPPER Summary of this function goes here
-%if IndependentDirectionsFlag is send as true, then it will compute the
+%if IndependentDirectionsFlag is set as true, then it will compute the
 %sensitivity indepenedent for each directions (X,Y,Z), if the argument is false or
 %is not given, it will compute only one sensitivity (direction of the vector)
 %it returns the sentitivities wrt to the strain energy and the mass
@@ -66,7 +66,7 @@ for i = 1:size(vectors,1)
                     %requested control point, for efficiency reasons. It
                     %also returns the sensitivity of mass of the model due
                     %to the perturbation
-                    [Ep_final, delta, a, b, c, Mass_final, Disp_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector_component,K_global,u_global,Compute,RelErrTolerance,delta);                
+                    [Ep_final, Mass_final, Disp_final, ~, delta] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector_component,K_global,u_global,Compute,RelErrTolerance,delta);                
                     SensitivityMatrix(i,j,d) = Ep_final; % save sensitivity to matrix
                     %The mass is currently calculated assuming a constant density of
                     %1.0 and constant thickness. Here the thickness is
@@ -87,7 +87,7 @@ for i = 1:size(vectors,1)
                 SensitivityDisplacement(i,j)=0;
             else
 %                disp(['calculating sensitivity of CP @ ',mat2str([i,j])]);
-                [Ep_final, delta, a, b, c, Mass_final, Disp_final] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,Compute,RelErrTolerance,delta);                
+                [Ep_final, Mass_final, Disp_final, ~, delta] = SensitivityWithErrorChecks( BSplinePatch,CP2Dist,vector,K_global,u_global,Compute,RelErrTolerance,delta);                
                 SensitivityMatrix(i,j) = Ep_final; % save sensitivity to matrix
                 SensitivityMass(i,j) = Mass_final;%save sensitivity mass
                 SensitivityDisplacement(i,j)=Disp_final;%save sensitivity displacement

@@ -230,7 +230,6 @@ toc
 tic
 [Smatrix,Smass,BSplinePatch]=GetEnergySensitivity( BSplinePatch, vectors);
 toc
-
 tic
 [Sdisp,Smass,BSplinePatch]=GetDisplacementSensitivity( BSplinePatch, vectors);
 toc
